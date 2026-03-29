@@ -1,0 +1,916 @@
+const STORAGE_KEYS = {
+  users: 'spendsmart_users',
+  currentUser: 'spendsmart_current_user',
+  theme: 'spendsmart_theme'
+};
+
+const authSection = document.getElementById('authSection');
+const dashboardSection = document.getElementById('dashboardSection');
+const sessionActions = document.getElementById('sessionActions');
+const welcomeText = document.getElementById('welcomeText');
+const registerForm = document.getElementById('registerForm');
+const loginForm = document.getElementById('loginForm');
+const transactionForm = document.getElementById('transactionForm');
+const transactionList = document.getElementById('transactionList');
+const emptyState = document.getElementById('emptyState');
+const filterType = document.getElementById('filterType');
+const searchInput = document.getElementById('searchInput');
+const logoutBtn = document.getElementById('logoutBtn');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const toast = document.getElementById('toast');
+const dateInput = document.getElementById('transactionDate');
+const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+const transactionType = document.getElementById('transactionType');
+const transactionCategory = document.getElementById('transactionCategory');
+const navItems = Array.from(document.querySelectorAll('.nav-item'));
+const sectionAnchors = Array.from(document.querySelectorAll('.section-anchor'));
+const demoAdButtons = Array.from(document.querySelectorAll('.demo-ad-btn'));
+
+const dashboardAdAmount = document.getElementById('dashboardAdAmount');
+const dashboardAdTerm = document.getElementById('dashboardAdTerm');
+const dashboardAdAmountValue = document.getElementById('dashboardAdAmountValue');
+const dashboardAdTermValue = document.getElementById('dashboardAdTermValue');
+const dashboardAdMonthly = document.getElementById('dashboardAdMonthly');
+const dashboardAdTotal = document.getElementById('dashboardAdTotal');
+const dashboardAdRate = document.getElementById('dashboardAdRate');
+const dashboardAdOfferMonthly = document.getElementById('dashboardAdOfferMonthly');
+
+const trendCanvas = document.getElementById('trendChart');
+const expenseCanvas = document.getElementById('expenseChart');
+
+const adRefs = {
+  top: {
+    avatar: document.getElementById('topAdAvatar'),
+    brand: document.getElementById('topAdBrand'),
+    url: document.getElementById('topAdUrl'),
+    deviceUrl: document.getElementById('topAdDeviceUrl'),
+    kicker: document.getElementById('topAdKicker'),
+    title: document.getElementById('topAdTitle'),
+    desc: document.getElementById('topAdDesc'),
+    chips: document.getElementById('topAdChips'),
+    rating: document.getElementById('topAdRating'),
+    reviews: document.getElementById('topAdReviews'),
+    note: document.getElementById('topAdNote'),
+    metric: document.getElementById('topAdMetric'),
+    btnPrimary: document.getElementById('topAdBtnPrimary'),
+    btnSecondary: document.getElementById('topAdBtnSecondary'),
+    dots: document.getElementById('topAdDots')
+  },
+  native: {
+    avatar: document.getElementById('nativeAdAvatar'),
+    brand: document.getElementById('nativeAdBrand'),
+    url: document.getElementById('nativeAdUrl'),
+    kicker: document.getElementById('nativeAdKicker'),
+    title: document.getElementById('nativeAdTitle'),
+    desc: document.getElementById('nativeAdDesc'),
+    points: document.getElementById('nativeAdPoints'),
+    smallBrand: document.getElementById('nativeAdSmallBrand'),
+    price: document.getElementById('nativeAdPrice'),
+    rating: document.getElementById('nativeAdRating'),
+    meta: document.getElementById('nativeAdMeta'),
+    meta2: document.getElementById('nativeAdMeta2'),
+    btn: document.getElementById('nativeAdBtn'),
+    dots: document.getElementById('nativeAdDots')
+  }
+};
+
+const totals = {
+  income: document.getElementById('incomeTotal'),
+  expense: document.getElementById('expenseTotal'),
+  balance: document.getElementById('balanceTotal'),
+  heroBalance: document.getElementById('heroBalance'),
+  count: document.getElementById('transactionCount'),
+  monthlyDifference: document.getElementById('monthlyDifference'),
+  topCategory: document.getElementById('topCategory'),
+  lastTransaction: document.getElementById('lastTransaction'),
+  currentMonthExpense: document.getElementById('currentMonthExpense'),
+  currentMonthIncome: document.getElementById('currentMonthIncome'),
+  sidebarGoal: document.getElementById('sidebarGoal'),
+  goalText: document.getElementById('goalText')
+};
+
+const CATEGORY_MAP = {
+  income: ['Alga', 'Premija', 'Stipendija', 'Laisvai samdomas darbas', 'Pardavimai', 'Dovanos', 'Kita'],
+  expense: ['Maistas', 'Transportas', 'Būstas', 'Sąskaitos', 'Mokslai', 'Laisvalaikis', 'Sveikata', 'Kita']
+};
+
+
+const DEMO_ADS = {
+  top: [
+    {
+      brand: 'PaskolaGo',
+      avatar: '€',
+      url: 'paskolago.lt',
+      kicker: 'Greita vartojimo paskola',
+      title: 'Gauk iki 15 000 € internetu per kelias minutes',
+      desc: 'Pateik paraišką nuotoliu, gauk atsakymą greitai ir matyk preliminarias sąlygas be papildomo vizito skyriuje.',
+      chips: ['Atsakymas per 2 min.', 'Nuo 8,9% BVKKMN', 'Be užstato'],
+      rating: '4.7/5',
+      reviews: '9 000+ paraiškų',
+      note: 'Demo reklamos blokas, stilizuotas kaip tikras paskolos pasiūlymas.',
+      metric: 'Iki €15k',
+      ctaPrimary: 'Pildyti paraišką',
+      ctaSecondary: 'Žiūrėti sąlygas'
+    },
+    {
+      brand: 'CreditNow',
+      avatar: 'C',
+      url: 'creditnow.lt',
+      kicker: 'Paskola būstui ar remontui',
+      title: 'Palygink kredito pasiūlymus ir rask mažesnę mėnesio įmoką',
+      desc: 'Vienoje vietoje peržiūrėk kelis pasiūlymus, preliminarią įmoką ir galimą finansavimo sumą pagal tavo poreikį.',
+      chips: ['Iki 25 000 €', 'Keli partneriai', 'Paraiška internetu'],
+      rating: '4.8/5',
+      reviews: '11 500+ užklausų',
+      note: 'Šviesus native bannerio stilius sukurtas tam, kad reklama išsiskirtų tamsiame dashboarde.',
+      metric: '€25k',
+      ctaPrimary: 'Gauti pasiūlymą',
+      ctaSecondary: 'Skaičiuoti įmoką'
+    },
+    {
+      brand: 'Lizingas+',
+      avatar: 'L',
+      url: 'lizingasplus.lt',
+      kicker: 'Refinansavimas ir lizingas',
+      title: 'Sujunk kelias įmokas į vieną ir paprasčiau planuok mėnesio biudžetą',
+      desc: 'Greitas refinansavimo pasiūlymas su aiškia mėnesio įmoka, terminu ir preliminaria bendra kredito kaina.',
+      chips: ['Refinansavimas', 'Fiksuota įmoka', 'Atsakymas tą pačią dieną'],
+      rating: '4.6/5',
+      reviews: '6 800+ klientų',
+      note: 'Demo reklama su aiškiais CTA ir kredito pasiūlymo stilistika.',
+      metric: '1 įmoka',
+      ctaPrimary: 'Pildyti paraišką',
+      ctaSecondary: 'Peržiūrėti'
+    }
+  ],
+  native: [
+    {
+      brand: 'RefiPlus',
+      avatar: 'R',
+      url: 'refiplus.lt',
+      kicker: 'Paskolos refinansavimas',
+      title: 'Sujunk įmokas į vieną mokėjimą ir sumažink mėnesio naštą',
+      desc: 'Palygink refinansavimo pasiūlymus, gauk individualias sąlygas ir matyk preliminarią mėnesio įmoką iš karto.',
+      points: ['Atsakymas per 2 min.', 'Galima mažesnė mėnesio įmoka', 'Paraiška internetu 24/7'],
+      price: 'Nuo 7,9% BVKKMN',
+      rating: '4.6/5',
+      meta: 'Be užstato',
+      meta2: 'Sprendimas internetu',
+      cta: 'Gauti pasiūlymą'
+    },
+    {
+      brand: 'MiniCredit',
+      avatar: 'M',
+      url: 'minicredit.lt',
+      kicker: 'Trumpalaikė paskola',
+      title: 'Skubioms išlaidoms – sprendimas per kelias minutes',
+      desc: 'Kai reikia greito finansavimo netikėtoms išlaidoms, pateik paraišką ir peržiūrėk individualų pasiūlymą internetu.',
+      points: ['Iki 5 000 €', 'Aiškios sąlygos', 'Greitas atsakymas'],
+      price: 'Iki €5 000',
+      rating: '4.5/5',
+      meta: 'Be popierinių dokumentų',
+      meta2: 'Darbo dienomis greitai',
+      cta: 'Pildyti paraišką'
+    },
+    {
+      brand: 'HomeLoan',
+      avatar: 'H',
+      url: 'homeloan.lt',
+      kicker: 'Paskola remontui',
+      title: 'Atnaujink namus su lankstesniu finansavimo planu',
+      desc: 'Pasitikrink preliminarią paskolos sumą, terminą ir mėnesio įmoką prieš priimdamas sprendimą.',
+      points: ['Iki 20 000 €', 'Lankstus terminas', 'Aiški mėnesio įmoka'],
+      price: 'Nuo 119 €/mėn.',
+      rating: '4.8/5',
+      meta: 'Skaičiuoklė internete',
+      meta2: 'Partnerių pasiūlymai',
+      cta: 'Skaičiuoti įmoką'
+    }
+  ]
+};
+
+const adRotationState = { top: 0, native: 0 };
+
+if (dateInput) dateInput.valueAsDate = new Date();
+updateCategoryOptions(transactionType?.value || 'income');
+
+window.addEventListener('resize', () => {
+  const user = getCurrentUser();
+  if (user) {
+    drawTrendChart(user.transactions || []);
+    drawExpenseChart(user.transactions || []);
+  }
+});
+
+function renderAdDots(container, items, activeIndex) {
+  if (!container) return;
+  container.innerHTML = items.map((_, index) => `
+    <span class="ad-dot ${index === activeIndex ? 'active' : ''}" aria-hidden="true"></span>
+  `).join('');
+}
+
+function renderTopAd(index = 0) {
+  const ad = DEMO_ADS.top[index];
+  const refs = adRefs.top;
+  if (!ad || !refs.title) return;
+
+  refs.avatar.textContent = ad.avatar;
+  refs.brand.textContent = ad.brand;
+  refs.url.textContent = ad.url;
+  refs.deviceUrl.textContent = ad.url;
+  refs.kicker.textContent = ad.kicker;
+  refs.title.textContent = ad.title;
+  refs.desc.textContent = ad.desc;
+  refs.rating.textContent = ad.rating;
+  refs.reviews.textContent = ad.reviews;
+  refs.note.textContent = ad.note;
+  refs.metric.textContent = ad.metric;
+  refs.btnPrimary.textContent = ad.ctaPrimary;
+  refs.btnSecondary.textContent = ad.ctaSecondary;
+  refs.btnPrimary.dataset.adName = ad.title;
+  refs.btnSecondary.dataset.adName = ad.title;
+  refs.chips.innerHTML = ad.chips.map(chip => `<span>${chip}</span>`).join('');
+  renderAdDots(refs.dots, DEMO_ADS.top, index);
+}
+
+function renderNativeAd(index = 0) {
+  const ad = DEMO_ADS.native[index];
+  const refs = adRefs.native;
+  if (!ad || !refs.title) return;
+
+  refs.avatar.textContent = ad.avatar;
+  refs.brand.textContent = ad.brand;
+  refs.url.textContent = ad.url;
+  refs.kicker.textContent = ad.kicker;
+  refs.title.textContent = ad.title;
+  refs.desc.textContent = ad.desc;
+  refs.points.innerHTML = ad.points.map(point => `<li>${point}</li>`).join('');
+  refs.smallBrand.textContent = ad.brand.toUpperCase();
+  refs.price.textContent = ad.price;
+  refs.rating.textContent = ad.rating;
+  refs.meta.textContent = ad.meta;
+  refs.meta2.textContent = ad.meta2;
+  refs.btn.textContent = ad.cta;
+  refs.btn.dataset.adName = ad.title;
+  renderAdDots(refs.dots, DEMO_ADS.native, index);
+}
+
+function startAdRotation() {
+  renderTopAd(adRotationState.top);
+  renderNativeAd(adRotationState.native);
+
+  if (startAdRotation.started) return;
+  startAdRotation.started = true;
+
+  setInterval(() => {
+    adRotationState.top = (adRotationState.top + 1) % DEMO_ADS.top.length;
+    renderTopAd(adRotationState.top);
+  }, 6500);
+
+  setInterval(() => {
+    adRotationState.native = (adRotationState.native + 1) % DEMO_ADS.native.length;
+    renderNativeAd(adRotationState.native);
+  }, 8200);
+}
+
+function formatCompactCurrency(value) {
+  return new Intl.NumberFormat('lt-LT', { maximumFractionDigits: 0 }).format(Number(value || 0)) + ' €';
+}
+
+function updateDashboardAdCalculator() {
+  if (!dashboardAdAmount || !dashboardAdTerm) return;
+
+  const principal = Number(dashboardAdAmount.value || 5000);
+  const months = Number(dashboardAdTerm.value || 48);
+  const annualRate = 8.9;
+  const monthlyRate = annualRate / 100 / 12;
+  const monthlyPayment = monthlyRate === 0
+    ? principal / months
+    : (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
+  const totalPayment = monthlyPayment * months;
+  const monthlyLabel = `${formatCompactCurrency(Math.round(monthlyPayment))} / mėn.`;
+
+  if (dashboardAdAmountValue) dashboardAdAmountValue.textContent = formatCompactCurrency(principal);
+  if (dashboardAdTermValue) dashboardAdTermValue.textContent = `${months} mėn.`;
+  if (dashboardAdMonthly) dashboardAdMonthly.textContent = monthlyLabel;
+  if (dashboardAdOfferMonthly) dashboardAdOfferMonthly.textContent = monthlyLabel;
+  if (dashboardAdTotal) dashboardAdTotal.textContent = formatCompactCurrency(Math.round(totalPayment));
+  if (dashboardAdRate) dashboardAdRate.textContent = `${annualRate.toFixed(1).replace('.', ',')}%`;
+}
+
+function getThemeColors() {
+  const styles = getComputedStyle(document.body);
+  return {
+    muted: styles.getPropertyValue('--chart-muted').trim() || 'rgba(151,165,195,0.92)',
+    text: styles.getPropertyValue('--chart-text').trim() || 'rgba(245,247,255,0.98)',
+    cardTop: styles.getPropertyValue('--chart-bg-top').trim() || 'rgba(255,255,255,0.03)',
+    cardBottom: styles.getPropertyValue('--chart-bg-bottom').trim() || 'rgba(255,255,255,0.015)',
+    centerBg: styles.getPropertyValue('--chart-center-bg').trim() || 'rgba(8,18,33,0.94)',
+    border: styles.getPropertyValue('--chart-border').trim() || 'rgba(255,255,255,0.08)',
+    tagBg: styles.getPropertyValue('--chart-tag-bg').trim() || 'rgba(255,255,255,0.04)'
+  };
+}
+
+function updateThemeToggleButton() {
+  if (!themeToggleBtn) return;
+  const isLight = document.body.dataset.theme === 'light';
+  themeToggleBtn.querySelector('.theme-toggle-icon').textContent = isLight ? '☀' : '☾';
+  themeToggleBtn.querySelector('.theme-toggle-text').textContent = isLight ? 'Šviesus režimas' : 'Tamsus režimas';
+}
+
+function applyTheme(theme) {
+  const safeTheme = theme === 'light' ? 'light' : 'dark';
+  document.body.dataset.theme = safeTheme;
+  localStorage.setItem(STORAGE_KEYS.theme, safeTheme);
+  updateThemeToggleButton();
+
+  if (!dashboardSection.classList.contains('hidden')) {
+    const user = getCurrentUser();
+    if (user) {
+      drawTrendChart(user.transactions || []);
+      drawExpenseChart(user.transactions || []);
+    }
+  }
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem(STORAGE_KEYS.theme) || 'dark';
+  applyTheme(savedTheme);
+}
+
+function getUsers() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]');
+}
+
+function saveUsers(users) {
+  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
+}
+
+function getCurrentUserEmail() {
+  return localStorage.getItem(STORAGE_KEYS.currentUser);
+}
+
+function setCurrentUserEmail(email) {
+  localStorage.setItem(STORAGE_KEYS.currentUser, email);
+}
+
+function clearCurrentUserEmail() {
+  localStorage.removeItem(STORAGE_KEYS.currentUser);
+}
+
+function findUserByEmail(email) {
+  return getUsers().find(user => user.email.toLowerCase() === email.toLowerCase());
+}
+
+function updateUser(updatedUser) {
+  const users = getUsers().map(user => user.email === updatedUser.email ? updatedUser : user);
+  saveUsers(users);
+}
+
+function getCurrentUser() {
+  const email = getCurrentUserEmail();
+  if (!email) return null;
+  return findUserByEmail(email) || null;
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('lt-LT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
+}
+
+function showToast(message, isError = false) {
+  toast.textContent = message;
+  toast.style.borderColor = isError ? 'rgba(242,107,107,0.35)' : 'rgba(108,140,255,0.35)';
+  toast.classList.add('show');
+  clearTimeout(showToast.timeout);
+  showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function hashPassword(password) {
+  return btoa(unescape(encodeURIComponent(password)));
+}
+
+function updateCategoryOptions(type) {
+  if (!transactionCategory) return;
+  const categories = CATEGORY_MAP[type] || CATEGORY_MAP.expense;
+  const current = transactionCategory.value;
+  transactionCategory.innerHTML = categories
+    .map(category => `<option value="${category}">${category}</option>`)
+    .join('');
+  if (categories.includes(current)) transactionCategory.value = current;
+}
+
+function setActiveNav(targetId) {
+  navItems.forEach(item => item.classList.toggle('active', item.dataset.target === targetId));
+}
+
+function scrollToSection(targetId) {
+  const section = document.getElementById(targetId);
+  if (!section) return;
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setActiveNav(targetId);
+}
+
+function updateActiveSectionByScroll() {
+  if (dashboardSection.classList.contains('hidden')) return;
+  let currentId = 'overviewSection';
+  sectionAnchors.forEach(section => {
+    const rect = section.getBoundingClientRect();
+    if (rect.top <= 180) currentId = section.id;
+  });
+  setActiveNav(currentId);
+}
+
+function renderApp() {
+  const user = getCurrentUser();
+
+  if (!user) {
+    authSection.classList.remove('hidden');
+    dashboardSection.classList.add('hidden');
+    sessionActions.classList.add('hidden');
+    return;
+  }
+
+  authSection.classList.add('hidden');
+  dashboardSection.classList.remove('hidden');
+  sessionActions.classList.remove('hidden');
+  welcomeText.textContent = `Prisijungęs: ${user.name}`;
+
+  const transactions = user.transactions || [];
+  renderTransactions(transactions);
+  updateSummary(transactions);
+  updateInsights(transactions);
+  drawTrendChart(transactions);
+  drawExpenseChart(transactions);
+  updateActiveSectionByScroll();
+}
+
+function updateSummary(transactions) {
+  const income = transactions.filter(item => item.type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
+  const expense = transactions.filter(item => item.type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
+  const balance = income - expense;
+
+  totals.income.textContent = formatCurrency(income);
+  totals.expense.textContent = formatCurrency(expense);
+  totals.balance.textContent = formatCurrency(balance);
+  totals.heroBalance.textContent = formatCurrency(balance);
+  totals.count.textContent = String(transactions.length);
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthTransactions = transactions.filter(item => {
+    const date = new Date(item.date);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+
+  const monthIncome = monthTransactions.filter(item => item.type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
+  const monthExpense = monthTransactions.filter(item => item.type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
+  const monthDiff = monthIncome - monthExpense;
+
+  totals.monthlyDifference.textContent = `Šį mėnesį pokytis ${formatCurrency(monthDiff)}`;
+  totals.currentMonthIncome.textContent = formatCurrency(monthIncome);
+  totals.currentMonthExpense.textContent = formatCurrency(monthExpense);
+  if (totals.sidebarGoal) totals.sidebarGoal.textContent = formatCurrency(monthDiff);
+  if (totals.goalText) {
+    totals.goalText.textContent = monthDiff >= 0
+      ? 'Šį mėnesį pajamos viršija išlaidas.'
+      : 'Šį mėnesį išlaidos viršija pajamas.';
+  }
+}
+
+function updateInsights(transactions) {
+  const expensesByCategory = {};
+  transactions.filter(item => item.type === 'expense').forEach(item => {
+    expensesByCategory[item.category] = (expensesByCategory[item.category] || 0) + Number(item.amount);
+  });
+
+  const topCategoryEntry = Object.entries(expensesByCategory).sort((a, b) => b[1] - a[1])[0];
+  totals.topCategory.textContent = topCategoryEntry ? `${topCategoryEntry[0]} • ${formatCurrency(topCategoryEntry[1])}` : 'Nėra duomenų';
+
+  const latest = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+  totals.lastTransaction.textContent = latest ? `${latest.description} • ${formatCurrency(latest.amount)}` : 'Nėra įrašų';
+}
+
+function getFilteredTransactions(transactions) {
+  const selectedType = filterType.value;
+  const searchValue = searchInput.value.trim().toLowerCase();
+
+  return transactions.filter(item => {
+    const typeMatch = selectedType === 'all' || item.type === selectedType;
+    const text = `${item.description} ${item.category}`.toLowerCase();
+    const searchMatch = !searchValue || text.includes(searchValue);
+    return typeMatch && searchMatch;
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function renderTransactions(transactions) {
+  const filtered = getFilteredTransactions(transactions);
+  transactionList.innerHTML = '';
+  emptyState.classList.toggle('hidden', filtered.length > 0);
+
+  filtered.forEach(item => {
+    const wrapper = document.createElement('article');
+    wrapper.className = 'transaction-item';
+
+    wrapper.innerHTML = `
+      <div class="transaction-badge ${item.type}">${item.type === 'income' ? '+' : '-'}</div>
+      <div class="transaction-main">
+        <h4>${escapeHtml(item.description)}</h4>
+        <div class="transaction-meta">
+          <span>${escapeHtml(item.category)}</span>
+          <span>${formatDate(item.date)}</span>
+          <span>${item.type === 'income' ? 'Pajamos' : 'Išlaidos'}</span>
+        </div>
+      </div>
+      <div class="transaction-right">
+        <div class="transaction-amount ${item.type}">${item.type === 'income' ? '+' : '-'} ${formatCurrency(item.amount)}</div>
+        <span class="status-pill ${item.registered ? 'done' : 'pending'}">
+          ${item.registered ? 'Užregistruota' : 'Laukia'}
+        </span>
+        <div class="transaction-actions">
+          <button class="icon-btn success" data-action="toggle" data-id="${item.id}">${item.registered ? 'Atšaukti' : 'Pažymėti'}</button>
+          <button class="icon-btn delete" data-action="delete" data-id="${item.id}">Ištrinti</button>
+        </div>
+      </div>
+    `;
+
+    transactionList.appendChild(wrapper);
+  });
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatDate(dateString) {
+  return new Intl.DateTimeFormat('lt-LT', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(dateString));
+}
+
+function addTransaction(data) {
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const transaction = {
+    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    type: data.type,
+    amount: Number(data.amount),
+    category: data.category,
+    date: data.date,
+    description: data.description.trim(),
+    registered: false
+  };
+
+  user.transactions = [...(user.transactions || []), transaction];
+  updateUser(user);
+  renderApp();
+}
+
+function deleteTransaction(id) {
+  const user = getCurrentUser();
+  if (!user) return;
+  user.transactions = (user.transactions || []).filter(item => item.id !== id);
+  updateUser(user);
+  renderApp();
+}
+
+function toggleRegistered(id) {
+  const user = getCurrentUser();
+  if (!user) return;
+  user.transactions = (user.transactions || []).map(item => item.id === id ? { ...item, registered: !item.registered } : item);
+  updateUser(user);
+  renderApp();
+}
+
+
+function drawTrendChart(transactions) {
+  if (!trendCanvas) return;
+  const ctx = trendCanvas.getContext('2d');
+  const ratio = window.devicePixelRatio || 1;
+  const width = trendCanvas.clientWidth || 700;
+  const height = 280;
+  trendCanvas.width = width * ratio;
+  trendCanvas.height = height * ratio;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  drawChartBackground(ctx, width, height);
+
+  const grouped = {};
+  transactions.filter(item => item.type === 'expense').forEach(item => {
+    grouped[item.category] = (grouped[item.category] || 0) + Number(item.amount);
+  });
+
+  let entries = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+  if (entries.length > 5) {
+    const top = entries.slice(0, 4);
+    const restSum = entries.slice(4).reduce((sum, [, value]) => sum + value, 0);
+    top.push(['Kita', restSum]);
+    entries = top;
+  }
+
+  drawDonutChart(
+    ctx,
+    width,
+    height,
+    entries,
+    {
+      emptyText: 'Kol kas nėra išlaidų duomenų pie chart atvaizdavimui.',
+      centerLabel: 'Išlaidos',
+      centerValue: formatCurrency(entries.reduce((sum, [, value]) => sum + value, 0)),
+      colors: ['#5f7bff', '#24c78a', '#ffb44f', '#ff7d66', '#8d75ff', '#5ed0f4']
+    }
+  );
+}
+
+function drawExpenseChart(transactions) {
+  if (!expenseCanvas) return;
+  const ctx = expenseCanvas.getContext('2d');
+  const ratio = window.devicePixelRatio || 1;
+  const width = expenseCanvas.clientWidth || 460;
+  const height = 280;
+  expenseCanvas.width = width * ratio;
+  expenseCanvas.height = height * ratio;
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  drawChartBackground(ctx, width, height);
+
+  const income = transactions
+    .filter(item => item.type === 'income')
+    .reduce((sum, item) => sum + Number(item.amount), 0);
+  const expense = transactions
+    .filter(item => item.type === 'expense')
+    .reduce((sum, item) => sum + Number(item.amount), 0);
+
+  drawDonutChart(
+    ctx,
+    width,
+    height,
+    [
+      ['Pajamos', income],
+      ['Išlaidos', expense]
+    ],
+    {
+      emptyText: 'Kol kas nėra duomenų santykio diagramai.',
+      centerLabel: 'Balansas',
+      centerValue: formatCurrency(income - expense),
+      colors: ['#22c07d', '#f26b6b'],
+      compact: true
+    }
+  );
+}
+
+function drawDonutChart(ctx, width, height, entries, options = {}) {
+  const theme = getThemeColors();
+  const validEntries = entries.filter(([, value]) => Number(value) > 0);
+  if (!validEntries.length) {
+    ctx.fillStyle = theme.muted;
+    ctx.font = '14px Inter';
+    ctx.fillText(options.emptyText || 'Nėra duomenų.', 22, 42);
+    return;
+  }
+
+  const total = validEntries.reduce((sum, [, value]) => sum + Number(value), 0);
+  const colors = options.colors || ['#6c8cff', '#22c07d', '#f4bf59', '#f26b6b', '#8e7dff'];
+
+  const compact = Boolean(options.compact);
+  const centerX = compact ? width * 0.34 : width * 0.30;
+  const centerY = height * 0.54;
+  const outerRadius = Math.min(width, height) * (compact ? 0.28 : 0.33);
+  const innerRadius = outerRadius * 0.58;
+
+  let startAngle = -Math.PI / 2;
+  validEntries.forEach(([label, value], index) => {
+    const sliceAngle = (Number(value) / total) * Math.PI * 2;
+    const endAngle = startAngle + sliceAngle;
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = colors[index % colors.length];
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, outerRadius, startAngle + 0.012, endAngle - 0.012);
+    ctx.closePath();
+    ctx.fillStyle = colors[index % colors.length];
+    ctx.fill();
+
+    startAngle = endAngle;
+  });
+
+  ctx.beginPath();
+  ctx.fillStyle = theme.centerBg;
+  ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = theme.border;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = theme.muted;
+  ctx.font = compact ? '12px Inter' : '13px Inter';
+  ctx.fillText(options.centerLabel || 'Iš viso', centerX, centerY - 6);
+  ctx.fillStyle = theme.text;
+  ctx.font = compact ? '700 15px Inter' : '700 18px Inter';
+  ctx.fillText(options.centerValue || formatCurrency(total), centerX, centerY + 16);
+
+  const legendX = compact ? width * 0.62 : width * 0.60;
+  let legendY = compact ? 44 : 38;
+
+  ctx.textAlign = 'left';
+  validEntries.forEach(([label, value], index) => {
+    const color = colors[index % colors.length];
+
+    ctx.fillStyle = color;
+    roundRect(ctx, legendX, legendY, 12, 12, 4, true, false);
+
+    ctx.fillStyle = theme.text;
+    ctx.font = '13px Inter';
+    ctx.fillText(label, legendX + 20, legendY + 10);
+
+    const percent = ((Number(value) / total) * 100).toFixed(0);
+    ctx.fillStyle = theme.muted;
+    ctx.font = '12px Inter';
+    ctx.fillText(`${formatCurrency(value)} • ${percent}%`, legendX + 20, legendY + 28);
+
+    legendY += 44;
+  });
+}
+
+function drawChartBackground(ctx, width, height) {
+  const theme = getThemeColors();
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, theme.cardTop);
+  gradient.addColorStop(1, theme.cardBottom);
+  ctx.fillStyle = gradient;
+  roundRect(ctx, 0, 0, width, height, 18, true, false);
+}
+
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  if (width <= 0 || height <= 0) return;
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+  if (fill) ctx.fill();
+  if (stroke) ctx.stroke();
+}
+
+registerForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const name = document.getElementById('registerName').value.trim();
+  const email = document.getElementById('registerEmail').value.trim();
+  const password = document.getElementById('registerPassword').value;
+
+  if (!name || !email || !password) {
+    showToast('Užpildyk visus registracijos laukus.', true);
+    return;
+  }
+  if (findUserByEmail(email)) {
+    showToast('Toks vartotojas jau egzistuoja.', true);
+    return;
+  }
+
+  const users = getUsers();
+  users.push({ name, email, password: hashPassword(password), transactions: [] });
+  saveUsers(users);
+  setCurrentUserEmail(email);
+  registerForm.reset();
+  showToast('Registracija sėkminga. Tu jau prisijungęs.');
+  renderApp();
+});
+
+loginForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const user = findUserByEmail(email);
+
+  if (!user || user.password !== hashPassword(password)) {
+    showToast('Neteisingi prisijungimo duomenys.', true);
+    return;
+  }
+
+  setCurrentUserEmail(user.email);
+  loginForm.reset();
+  showToast('Prisijungimas sėkmingas.');
+  renderApp();
+});
+
+transactionForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const type = document.getElementById('transactionType').value;
+  const amount = parseFloat(document.getElementById('transactionAmount').value);
+  const category = document.getElementById('transactionCategory').value;
+  const date = document.getElementById('transactionDate').value;
+  const description = document.getElementById('transactionDescription').value;
+
+  if (!description.trim()) {
+    showToast('Įvesk aprašymą.', true);
+    return;
+  }
+  if (!amount || amount <= 0) {
+    showToast('Suma turi būti didesnė už 0.', true);
+    return;
+  }
+
+  addTransaction({ type, amount, category, date, description });
+  transactionForm.reset();
+  if (transactionType) transactionType.value = 'income';
+  updateCategoryOptions('income');
+  if (dateInput) dateInput.valueAsDate = new Date();
+  showToast('Finansinis įrašas pridėtas.');
+});
+
+transactionList.addEventListener('click', event => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+
+  const { action, id } = button.dataset;
+  if (action === 'delete') {
+    deleteTransaction(id);
+    showToast('Įrašas ištrintas.');
+  }
+  if (action === 'toggle') {
+    toggleRegistered(id);
+    showToast('Įrašo būsena atnaujinta.');
+  }
+});
+
+filterType.addEventListener('change', () => {
+  const user = getCurrentUser();
+  if (user) renderTransactions(user.transactions || []);
+});
+
+searchInput.addEventListener('input', () => {
+  const user = getCurrentUser();
+  if (user) renderTransactions(user.transactions || []);
+});
+
+logoutBtn.addEventListener('click', () => {
+  clearCurrentUserEmail();
+  showToast('Sėkmingai atsijungei.');
+  renderApp();
+});
+
+clearAllBtn.addEventListener('click', () => {
+  const user = getCurrentUser();
+  if (!user) return;
+  if (!confirm('Ar tikrai nori ištrinti visus įrašus?')) return;
+
+  user.transactions = [];
+  updateUser(user);
+  renderApp();
+  showToast('Visi įrašai ištrinti.');
+});
+
+if (transactionType) {
+  transactionType.addEventListener('change', () => updateCategoryOptions(transactionType.value));
+}
+
+navItems.forEach(item => {
+  item.addEventListener('click', () => scrollToSection(item.dataset.target));
+});
+
+window.addEventListener('scroll', updateActiveSectionByScroll);
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+    applyTheme(nextTheme);
+  });
+}
+
+if (dashboardAdAmount) dashboardAdAmount.addEventListener('input', updateDashboardAdCalculator);
+if (dashboardAdTerm) dashboardAdTerm.addEventListener('input', updateDashboardAdCalculator);
+
+document.addEventListener('click', event => {
+  const button = event.target.closest('.demo-ad-btn');
+  if (!button) return;
+  const adName = button.dataset.adName || 'partnerio pasiūlymas';
+  showToast(`Atidaryta demonstracinė reklama: ${adName}. Čia vėliau galima įkelti tikrą reklamos tinklo kodą.`);
+});
+
+if (sidebarLogoutBtn) {
+  sidebarLogoutBtn.addEventListener('click', () => {
+    clearCurrentUserEmail();
+    showToast('Sėkmingai atsijungei.');
+    renderApp();
+  });
+}
+
+initTheme();
+updateDashboardAdCalculator();
+startAdRotation();
+renderApp();

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpendSmart – Asmeninių finansų sekimas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="background-glow glow-a"></div>
+  <div class="background-glow glow-b"></div>
+  <div class="background-grid"></div>
+
+  <header class="topbar">
+    <div class="brand-block">
+      <div class="brand-mark">S</div>
+      <div>
+        <h1>SpendSmart</h1>
+        <p>Asmeninių finansų sekimas moderniame fintech stiliuje</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="themeToggleBtn" class="btn btn-outline theme-toggle" type="button" aria-label="Pakeisti spalvų režimą">
+        <span class="theme-toggle-icon">☾</span>
+        <span class="theme-toggle-text">Tamsus režimas</span>
+      </button>
+      <div id="sessionActions" class="session-actions hidden">
+        <span id="welcomeText"></span>
+        <button id="logoutBtn" class="btn btn-outline">Atsijungti</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section id="authSection" class="auth-shell">
+      <div class="auth-panel card glass-card">
+        <div class="auth-copy">
+          <p class="eyebrow">Asmeninis finansų valdymas</p>
+          <h2>Valdyk pajamas, išlaidas ir balansą vienoje profesionalioje sistemoje</h2>
+          <p class="intro-text">Prisijunk prie modernaus finansų sekimo įrankio, kuris leidžia stebėti pinigų srautą, analizuoti išlaidas ir matyti svarbiausius rodiklius realiu laiku.</p>
+
+          <div class="feature-stack">
+            <div class="feature-row"><span class="feature-dot"></span> Greitas įrašų pridėjimas</div>
+            <div class="feature-row"><span class="feature-dot"></span> Automatiniai balanso skaičiavimai</div>
+            <div class="feature-row"><span class="feature-dot"></span> Mėnesio statistika ir kategorijos</div>
+            <div class="feature-row"><span class="feature-dot"></span> Aiškus istorijos filtras ir paieška</div>
+          </div>
+
+          <div class="mock-dashboard card inset-card">
+            <div class="mock-top">
+              <span>Šio mėnesio balansas</span>
+              <strong>+ €1,248.40</strong>
+            </div>
+            <div class="mock-chart">
+              <span style="height:42%"></span>
+              <span style="height:65%"></span>
+              <span style="height:54%"></span>
+              <span style="height:81%"></span>
+              <span style="height:70%"></span>
+              <span style="height:92%"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-forms">
+          <div class="card auth-card">
+            <div class="card-header">
+              <h3>Registracija</h3>
+              <p>Sukurk paskyrą ir pradėk naudoti sistemą.</p>
+            </div>
+            <form id="registerForm" class="form-grid">
+              <label>
+                <span>Vardas</span>
+                <input type="text" id="registerName" placeholder="Pvz. Vardenis" required />
+              </label>
+              <label>
+                <span>El. paštas</span>
+                <input type="email" id="registerEmail" placeholder="vardas@email.com" required />
+              </label>
+              <label>
+                <span>Slaptažodis</span>
+                <input type="password" id="registerPassword" placeholder="Bent 6 simboliai" required minlength="6" />
+              </label>
+              <button type="submit" class="btn btn-primary">Užsiregistruoti</button>
+            </form>
+          </div>
+
+
+          <div class="card auth-card">
+            <div class="card-header">
+              <h3>Prisijungimas</h3>
+              <p>Prisijunk ir valdyk savo finansus.</p>
+            </div>
+            <form id="loginForm" class="form-grid">
+              <label>
+                <span>El. paštas</span>
+                <input type="email" id="loginEmail" placeholder="vardas@email.com" required />
+              </label>
+              <label>
+                <span>Slaptažodis</span>
+                <input type="password" id="loginPassword" placeholder="Įvesk slaptažodį" required />
+              </label>
+              <button type="submit" class="btn btn-primary">Prisijungti</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboardSection" class="dashboard hidden">
+      <aside class="sidebar card glass-card">
+        <div class="sidebar-brand">
+          <div class="brand-mark small">S</div>
+          <div>
+            <strong>SpendSmart</strong>
+            <p>Finansų valdymas</p>
+          </div>
+        </div>
+
+        <nav class="nav-menu">
+          <button class="nav-item active" type="button" data-target="overviewSection"><span>▣</span> Skydelis</button>
+          <button class="nav-item" type="button" data-target="operationsSection"><span>↕</span> Operacijos</button>
+          <button class="nav-item" type="button" data-target="analyticsSection"><span>◔</span> Analitika</button>
+          <button class="nav-item" type="button" data-target="historySection"><span>☰</span> Istorija</button>
+        </nav>
+
+        <div class="sidebar-card">
+          <span class="sidebar-label">Šio mėnesio pokytis</span>
+          <strong id="sidebarGoal">€0.00</strong>
+          <p id="goalText">Pajamų ir išlaidų skirtumas einamąjį mėnesį.</p>
+        </div>
+
+        <div class="sidebar-footer">
+          <p>Tvarkyk finansus aiškiai, saugiai ir patogiai.</p>
+          <button id="sidebarLogoutBtn" class="btn btn-outline full-btn" type="button">Atsijungti</button>
+        </div>
+      </aside>
+
+      <div class="dashboard-main">
+        <section id="overviewSection" class="hero card glass-card section-anchor">
+          <div>
+            <p class="eyebrow">Valdymo skydelis</p>
+            <h2>Sveikas sugrįžęs į savo finansų centrą</h2>
+            <p>Čia gali stebėti balansą, mėnesio statistiką, kategorijų pasiskirstymą ir visą savo įrašų istoriją vienoje vietoje.</p>
+          </div>
+          <div class="hero-balance-card">
+            <span>Aktyvus balansas</span>
+            <strong id="heroBalance">€0.00</strong>
+            <small id="monthlyDifference">Šį mėnesį pokytis €0.00</small>
+          </div>
+        </section>
+        <section id="topAdSlot" class="demo-ad ad-horizontal card glass-card" aria-label="Demonstracinė reklama">
+          <div class="ad-slot-shell">
+            <div class="ad-slot-header">
+              <div class="ad-brandline">
+                <div class="ad-brand-avatar" id="topAdAvatar">€</div>
+                <div>
+                  <div class="ad-brand-name" id="topAdBrand">PaskolaGo</div>
+                  <div class="ad-brand-url" id="topAdUrl">paskolago.lt</div>
+                </div>
+              </div>
+              <div class="ad-meta-right">
+                <span class="ad-label">Reklama</span>
+                <span class="ad-badge-soft">Paskolos pasiūlymas</span>
+                <span class="ad-adchoices">AdChoices</span>
+              </div>
+            </div>
+
+            <div class="ad-slot-body">
+              <div class="ad-copy">
+                <div class="ad-kicker" id="topAdKicker">Greita vartojimo paskola</div>
+                <h3 id="topAdTitle">Gauk iki 15 000 € internetu per kelias minutes</h3>
+                <p id="topAdDesc">Pateik paraišką nuotoliu, gauk atsakymą greitai ir peržiūrėk individualų pasiūlymą be papildomo vizito.</p>
+                <div class="ad-chips" id="topAdChips"></div>
+                <div class="ad-trust-row">
+                  <div class="ad-rating-chip"><span>★</span><strong id="topAdRating">4.7/5</strong><small id="topAdReviews">9 000+ paraiškų</small></div>
+                  <div class="ad-note" id="topAdNote">Demo reklamos blokas, stilizuotas kaip tikras paskolos pasiūlymas.</div>
+                </div>
+              </div>
+
+              <div class="ad-visual">
+                <div class="ad-device-card">
+                  <div class="ad-device-top">
+                    <span class="ad-device-pill">Sponsored</span>
+                    <span class="ad-device-domain" id="topAdDeviceUrl">paskolago.lt</span>
+                  </div>
+                  <div class="ad-device-screen">
+                    <div class="ad-device-metric">
+                      <small>Galima suma</small>
+                      <strong id="topAdMetric">Iki €15k</strong>
+                    </div>
+                    <div class="ad-mini-bars">
+                      <span style="height: 34%"></span>
+                      <span style="height: 60%"></span>
+                      <span style="height: 78%"></span>
+                      <span style="height: 54%"></span>
+                    </div>
+                  </div>
+                  <div class="ad-device-footer">
+                    <button class="btn btn-primary demo-ad-btn" type="button" id="topAdBtnPrimary" data-ad-name="PaskolaGo">Pildyti paraišką</button>
+                    <button class="btn btn-ghost demo-ad-btn" type="button" id="topAdBtnSecondary" data-ad-name="PaskolaGo">Žiūrėti sąlygas</button>
+                  </div>
+                </div>
+                <div class="ad-rotator" id="topAdDots" aria-label="Reklamos rotacija"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        
+
+        <section class="stats-grid">
+          <article class="stat-card income">
+            <div class="stat-icon">↗</div>
+            <span>Pajamos</span>
+            <strong id="incomeTotal">€0.00</strong>
+            <small>Visos gautos pajamos</small>
+          </article>
+          <article class="stat-card expense">
+            <div class="stat-icon">↘</div>
+            <span>Išlaidos</span>
+            <strong id="expenseTotal">€0.00</strong>
+            <small>Visos registruotos išlaidos</small>
+          </article>
+          <article class="stat-card balance">
+            <div class="stat-icon">€</div>
+            <span>Bendras balansas</span>
+            <strong id="balanceTotal">€0.00</strong>
+            <small>Skirtumas tarp pajamų ir išlaidų</small>
+          </article>
+          <article class="stat-card neutral">
+            <div class="stat-icon">#</div>
+            <span>Įrašų skaičius</span>
+            <strong id="transactionCount">0</strong>
+            <small>Iš viso įrašų sistemoje</small>
+          </article>
+        </section>
+
+        <section id="analyticsSection" class="analytics-grid section-anchor">
+          <article class="card glass-card chart-card wide">
+            <div class="card-header row-between">
+              <div>
+                <h3>Išlaidų pasiskirstymas</h3>
+                <p>Didžiausios išlaidų kategorijos pateikiamos kaip aiškus pie chart.</p>
+              </div>
+              <span class="pill">Pie chart</span>
+            </div>
+            <canvas id="trendChart" height="280"></canvas>
+          </article>
+
+          <article class="card glass-card chart-card">
+            <div class="card-header">
+              <h3>Pajamų ir išlaidų santykis</h3>
+              <p>Greita bendra pinigų srauto apžvalga.</p>
+            </div>
+            <canvas id="expenseChart" height="280"></canvas>
+          </article>
+        </section>
+        <section id="dashboardLoanAd" class="demo-ad ad-auth ad-dashboard-calc card" aria-label="Demonstracinė paskolos reklama">
+          <div class="ad-auth-top">
+            <div class="ad-brandline">
+              <div class="ad-brand-avatar">€</div>
+              <div>
+                <div class="ad-brand-name">Paskola24</div>
+                <div class="ad-brand-url">paskola24.lt</div>
+              </div>
+            </div>
+            <div class="ad-meta-right compact">
+              <span class="ad-label">Reklama</span>
+              <span class="ad-badge-soft">Partnerio pasiūlymas</span>
+            </div>
+          </div>
+          <div class="ad-auth-kicker">Vartojimo paskola internetu</div>
+          <h4>Iki 10 000 € be užstato – paskaičiuok preliminarią mėnesio įmoką prieš pildydamas paraišką</h4>
+          <p>Interaktyvus reklamos blokas su paskolos skaičiuokle padeda greitai įvertinti mėnesio įmoką, terminą ir preliminarią bendrą grąžinamą sumą.</p>
+          <div class="ad-auth-benefits">
+            <span>BVKKMN nuo 8,9%</span>
+            <span>Sprendimas per 2 min.</span>
+            <span>100% nuotoliu</span>
+          </div>
+
+          <div class="ad-loan-calc">
+            <div class="ad-calc-header">
+              <div>
+                <small>Preliminari paskolos skaičiuoklė</small>
+                <strong>Įmokos paskaičiavimas</strong>
+              </div>
+              <span class="ad-calc-pill">Demo</span>
+            </div>
+
+            <div class="ad-calc-field">
+              <div class="ad-calc-field-top">
+                <span>Paskolos suma</span>
+                <strong id="dashboardAdAmountValue">5 000 €</strong>
+              </div>
+              <input id="dashboardAdAmount" type="range" min="1000" max="10000" step="500" value="5000" />
+            </div>
+
+            <div class="ad-calc-field">
+              <div class="ad-calc-field-top">
+                <span>Terminas</span>
+                <strong id="dashboardAdTermValue">48 mėn.</strong>
+              </div>
+              <input id="dashboardAdTerm" type="range" min="12" max="72" step="12" value="48" />
+            </div>
+
+            <div class="ad-calc-grid">
+              <div class="ad-calc-box highlight">
+                <small>Preliminari mėnesio įmoka</small>
+                <strong id="dashboardAdMonthly">124 € / mėn.</strong>
+              </div>
+              <div class="ad-calc-box">
+                <small>Bendra grąžinama suma</small>
+                <strong id="dashboardAdTotal">5 952 €</strong>
+              </div>
+              <div class="ad-calc-box slim">
+                <small>Fiksuotas tarifas</small>
+                <strong id="dashboardAdRate">8,9%</strong>
+              </div>
+              <div class="ad-calc-box slim">
+                <small>Sprendimas</small>
+                <strong>~2 min.</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="ad-auth-offer">
+            <div>
+              <small>Mėnesio įmoka nuo</small>
+              <strong id="dashboardAdOfferMonthly">124 € / mėn.</strong>
+            </div>
+            <div class="ad-auth-cta-group">
+              <button class="btn btn-primary demo-ad-btn" type="button" data-ad-name="Paskola24 skaičiuoklė">Gauti pasiūlymą</button>
+              <button class="btn btn-ghost demo-ad-btn" type="button" data-ad-name="Paskola24 sąlygos">Žiūrėti sąlygas</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="operationsSection" class="content-grid section-anchor">
+          <div class="card glass-card form-card">
+            <div class="card-header">
+              <h3>Naujas finansinis įrašas</h3>
+              <p>Pridėk pajamas arba išlaidas su visa reikalinga informacija.</p>
+            </div>
+            <form id="transactionForm" class="form-grid">
+              <label>
+                <span>Tipas</span>
+                <select id="transactionType" required>
+                  <option value="income">Pajamos</option>
+                  <option value="expense">Išlaidos</option>
+                </select>
+              </label>
+              <label>
+                <span>Suma (€)</span>
+                <input type="number" id="transactionAmount" min="0.01" step="0.01" placeholder="Pvz. 120.50" required />
+              </label>
+              <label>
+                <span>Kategorija</span>
+                <select id="transactionCategory" required>
+                  <option value="Alga">Alga</option>
+                  <option value="Laisvalaikis">Laisvalaikis</option>
+                  <option value="Maistas">Maistas</option>
+                  <option value="Transportas">Transportas</option>
+                  <option value="Sąskaitos">Sąskaitos</option>
+                  <option value="Mokslai">Mokslai</option>
+                  <option value="Kita">Kita</option>
+                </select>
+              </label>
+              <label>
+                <span>Data</span>
+                <input type="date" id="transactionDate" required />
+              </label>
+              <label class="full-width">
+                <span>Aprašymas</span>
+                <input type="text" id="transactionDescription" placeholder="Pvz. Maisto apsipirkimas" required />
+              </label>
+              <button type="submit" class="btn btn-primary">Pridėti įrašą</button>
+            </form>
+          </div>
+
+          <div class="card glass-card insights-card">
+            <div class="card-header">
+              <h3>Greita mėnesio apžvalga</h3>
+              <p>Trumpa santrauka pagal dabartinius duomenis.</p>
+            </div>
+            <div class="insight-list">
+              <div class="insight-item">
+                <span>Didžiausia kategorija</span>
+                <strong id="topCategory">—</strong>
+              </div>
+              <div class="insight-item">
+                <span>Paskutinis įrašas</span>
+                <strong id="lastTransaction">—</strong>
+              </div>
+              <div class="insight-item">
+                <span>Šio mėnesio išlaidos</span>
+                <strong id="currentMonthExpense">€0.00</strong>
+              </div>
+              <div class="insight-item">
+                <span>Šio mėnesio pajamos</span>
+                <strong id="currentMonthIncome">€0.00</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="historySection" class="card glass-card history-card section-anchor">
+          <div class="card-header row-between wrap-gap">
+            <div>
+              <h3>Įrašų istorija</h3>
+              <p>Matyk visus savo finansinius veiksmus viename moderniame sąraše.</p>
+            </div>
+            <button id="clearAllBtn" class="btn btn-danger">Ištrinti visus</button>
+          </div>
+
+          <div class="filters">
+            <label>
+              <span>Filtras</span>
+              <select id="filterType">
+                <option value="all">Visi įrašai</option>
+                <option value="income">Tik pajamos</option>
+                <option value="expense">Tik išlaidos</option>
+              </select>
+            </label>
+            <label>
+              <span>Paieška</span>
+              <input type="text" id="searchInput" placeholder="Ieškoti pagal aprašymą ar kategoriją" />
+            </label>
+          </div>
+
+          <div id="emptyState" class="empty-state">
+            <h4>Kol kas įrašų nėra</h4>
+            <p>Pridėk pirmą pajamų arba išlaidų įrašą ir sistema iš karto atnaujins statistiką.</p>
+          </div>
+
+          <div id="transactionList" class="transaction-list"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
