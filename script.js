@@ -19,13 +19,29 @@ const logoutBtn = document.getElementById('logoutBtn');
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const toast = document.getElementById('toast');
+const emptyStateBtn = document.getElementById('emptyStateBtn');
+const transactionSubmitBtn = document.getElementById('transactionSubmitBtn');
+const cancelEditBtn = document.getElementById('cancelEditBtn');
 const dateInput = document.getElementById('transactionDate');
+const transactionFormTitle = document.getElementById('transactionFormTitle');
+const transactionFormSubtitle = document.getElementById('transactionFormSubtitle');
+const editNotice = document.getElementById('editNotice');
+const operationsSection = document.getElementById('operationsSection');
+const formCard = document.querySelector('.form-card');
 const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
 const transactionType = document.getElementById('transactionType');
 const transactionCategory = document.getElementById('transactionCategory');
 const navItems = Array.from(document.querySelectorAll('.nav-item'));
 const sectionAnchors = Array.from(document.querySelectorAll('.section-anchor'));
 const demoAdButtons = Array.from(document.querySelectorAll('.demo-ad-btn'));
+
+const transactionAmountInput = document.getElementById('transactionAmount');
+const transactionDescriptionInput = document.getElementById('transactionDescription');
+const registerNameInput = document.getElementById('registerName');
+const registerEmailInput = document.getElementById('registerEmail');
+const registerPasswordInput = document.getElementById('registerPassword');
+const loginEmailInput = document.getElementById('loginEmail');
+const loginPasswordInput = document.getElementById('loginPassword');
 
 const dashboardAdAmount = document.getElementById('dashboardAdAmount');
 const dashboardAdTerm = document.getElementById('dashboardAdTerm');
@@ -191,6 +207,7 @@ const DEMO_ADS = {
 };
 
 const adRotationState = { top: 0, native: 0 };
+let editingTransactionId = null;
 
 if (dateInput) dateInput.valueAsDate = new Date();
 updateCategoryOptions(transactionType?.value || 'income');
@@ -379,11 +396,177 @@ function formatCurrency(value) {
 }
 
 function showToast(message, isError = false) {
-  toast.textContent = message;
-  toast.style.borderColor = isError ? 'rgba(242,107,107,0.35)' : 'rgba(108,140,255,0.35)';
-  toast.classList.add('show');
+  const variant = isError ? 'error' : 'success';
+  const icon = isError ? '⚠' : '✓';
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-body"><strong>${isError ? 'Klaida' : 'Pavyko'}</strong><span>${message}</span></div>`;
+  toast.classList.remove('error', 'success');
+  toast.classList.add(variant, 'show');
   clearTimeout(showToast.timeout);
-  showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+  showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+function ensureErrorNode(input) {
+  if (!input) return null;
+  let node = input.parentElement.querySelector('.field-error');
+  if (!node) {
+    node = document.createElement('small');
+    node.className = 'field-error';
+    input.parentElement.appendChild(node);
+  }
+  return node;
+}
+
+function setFieldError(input, message) {
+  const node = ensureErrorNode(input);
+  if (!node) return;
+  input.classList.add('input-error');
+  node.textContent = message;
+}
+
+function clearFieldError(input) {
+  if (!input) return;
+  input.classList.remove('input-error');
+  const node = input.parentElement.querySelector('.field-error');
+  if (node) node.textContent = '';
+}
+
+function clearFormErrors(form) {
+  form.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+  form.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+}
+
+function validateRegisterForm() {
+  clearFormErrors(registerForm);
+  let valid = true;
+  const name = registerNameInput.value.trim();
+  const email = registerEmailInput.value.trim();
+  const password = registerPasswordInput.value;
+
+  if (name.length < 2) {
+    setFieldError(registerNameInput, 'Įvesk bent 2 simbolių vardą.');
+    valid = false;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setFieldError(registerEmailInput, 'Įvesk teisingą el. pašto adresą.');
+    valid = false;
+  } else if (findUserByEmail(email)) {
+    setFieldError(registerEmailInput, 'Toks vartotojas jau egzistuoja.');
+    valid = false;
+  }
+  if (!password || password.length < 6) {
+    setFieldError(registerPasswordInput, 'Slaptažodis turi būti bent 6 simbolių.');
+    valid = false;
+  }
+  return valid;
+}
+
+function validateLoginForm() {
+  clearFormErrors(loginForm);
+  let valid = true;
+  const email = loginEmailInput.value.trim();
+  const password = loginPasswordInput.value;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    setFieldError(loginEmailInput, 'Įvesk teisingą el. pašto adresą.');
+    valid = false;
+  }
+  if (!password) {
+    setFieldError(loginPasswordInput, 'Įvesk slaptažodį.');
+    valid = false;
+  }
+  return valid;
+}
+
+function validateTransactionForm() {
+  clearFormErrors(transactionForm);
+  let valid = true;
+  const amount = parseFloat(transactionAmountInput.value);
+  const description = transactionDescriptionInput.value.trim();
+  const category = transactionCategory.value;
+  const date = dateInput.value;
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    setFieldError(transactionAmountInput, 'Suma turi būti didesnė už 0.');
+    valid = false;
+  }
+  if (!category) {
+    setFieldError(transactionCategory, 'Pasirink kategoriją.');
+    valid = false;
+  }
+  if (!date) {
+    setFieldError(dateInput, 'Pasirink datą.');
+    valid = false;
+  }
+  if (description.length < 3) {
+    setFieldError(transactionDescriptionInput, 'Aprašymas turi būti bent 3 simbolių.');
+    valid = false;
+  }
+  return valid;
+}
+
+
+function focusTransactionForm({ descriptionFirst = false } = {}) {
+  scrollToSection('operationsSection');
+  if (formCard) {
+    formCard.classList.remove('focus-flash');
+    void formCard.offsetWidth;
+    formCard.classList.add('focus-flash');
+    clearTimeout(focusTransactionForm.flashTimeout);
+    focusTransactionForm.flashTimeout = setTimeout(() => formCard.classList.remove('focus-flash'), 1400);
+  }
+  const target = descriptionFirst ? transactionDescriptionInput : transactionAmountInput;
+  setTimeout(() => {
+    if (target) {
+      target.focus();
+      target.select?.();
+    }
+  }, 380);
+}
+
+function setEditMode(isEditing) {
+  if (formCard) formCard.classList.toggle('editing-mode', isEditing);
+  if (editNotice) editNotice.classList.toggle('hidden', !isEditing);
+  if (transactionFormTitle) transactionFormTitle.textContent = isEditing ? 'Redaguoti finansinį įrašą' : 'Naujas finansinis įrašas';
+  if (transactionFormSubtitle) transactionFormSubtitle.textContent = isEditing
+    ? 'Pakoreguok pasirinktą įrašą ir išsaugok pakeitimus.'
+    : 'Pridėk pajamas arba išlaidas su visa reikalinga informacija.';
+  if (transactionSubmitBtn) transactionSubmitBtn.textContent = isEditing ? 'Išsaugoti pakeitimus' : 'Pridėti įrašą';
+  if (cancelEditBtn) cancelEditBtn.classList.toggle('hidden', !isEditing);
+}
+
+function startEditTransaction(id) {
+  const user = getCurrentUser();
+  if (!user) return;
+  const item = (user.transactions || []).find(entry => entry.id === id);
+  if (!item) return;
+  editingTransactionId = id;
+  transactionType.value = item.type;
+  updateCategoryOptions(item.type);
+  transactionAmountInput.value = item.amount;
+  transactionCategory.value = item.category;
+  dateInput.value = item.date;
+  transactionDescriptionInput.value = item.description;
+  renderTransactions(user.transactions || []);
+  setEditMode(true);
+  focusTransactionForm();
+  showToast('Įrašas paruoštas redagavimui.');
+}
+
+function stopEditTransaction() {
+  editingTransactionId = null;
+  transactionForm.reset();
+  if (transactionType) transactionType.value = 'income';
+  updateCategoryOptions('income');
+  if (dateInput) dateInput.valueAsDate = new Date();
+  setEditMode(false);
+  clearFormErrors(transactionForm);
+}
+
+function updateTransaction(id, data) {
+  const user = getCurrentUser();
+  if (!user) return;
+  user.transactions = (user.transactions || []).map(item => item.id === id ? { ...item, ...data, amount: Number(data.amount), description: data.description.trim() } : item);
+  updateUser(user);
+  renderApp();
 }
 
 function hashPassword(password) {
@@ -512,7 +695,7 @@ function renderTransactions(transactions) {
 
   filtered.forEach(item => {
     const wrapper = document.createElement('article');
-    wrapper.className = 'transaction-item';
+    wrapper.className = `transaction-item ${editingTransactionId === item.id ? 'editing' : ''}`;
 
     wrapper.innerHTML = `
       <div class="transaction-badge ${item.type}">${item.type === 'income' ? '+' : '-'}</div>
@@ -530,6 +713,7 @@ function renderTransactions(transactions) {
           ${item.registered ? 'Užregistruota' : 'Laukia'}
         </span>
         <div class="transaction-actions">
+          <button class="icon-btn" data-action="edit" data-id="${item.id}">Redaguoti</button>
           <button class="icon-btn success" data-action="toggle" data-id="${item.id}">${item.registered ? 'Atšaukti' : 'Pažymėti'}</button>
           <button class="icon-btn delete" data-action="delete" data-id="${item.id}">Ištrinti</button>
         </div>
@@ -769,67 +953,68 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 
 registerForm.addEventListener('submit', event => {
   event.preventDefault();
-  const name = document.getElementById('registerName').value.trim();
-  const email = document.getElementById('registerEmail').value.trim();
-  const password = document.getElementById('registerPassword').value;
-
-  if (!name || !email || !password) {
-    showToast('Užpildyk visus registracijos laukus.', true);
+  if (!validateRegisterForm()) {
+    showToast('Patikrink registracijos laukus.', true);
     return;
   }
-  if (findUserByEmail(email)) {
-    showToast('Toks vartotojas jau egzistuoja.', true);
-    return;
-  }
+  const name = registerNameInput.value.trim();
+  const email = registerEmailInput.value.trim();
+  const password = registerPasswordInput.value;
 
   const users = getUsers();
   users.push({ name, email, password: hashPassword(password), transactions: [] });
   saveUsers(users);
   setCurrentUserEmail(email);
   registerForm.reset();
+  clearFormErrors(registerForm);
   showToast('Registracija sėkminga. Tu jau prisijungęs.');
   renderApp();
 });
 
 loginForm.addEventListener('submit', event => {
   event.preventDefault();
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
+  if (!validateLoginForm()) {
+    showToast('Patikrink prisijungimo duomenis.', true);
+    return;
+  }
+  const email = loginEmailInput.value.trim();
+  const password = loginPasswordInput.value;
   const user = findUserByEmail(email);
 
   if (!user || user.password !== hashPassword(password)) {
+    setFieldError(loginPasswordInput, 'Neteisingas el. paštas arba slaptažodis.');
     showToast('Neteisingi prisijungimo duomenys.', true);
     return;
   }
 
   setCurrentUserEmail(user.email);
   loginForm.reset();
+  clearFormErrors(loginForm);
   showToast('Prisijungimas sėkmingas.');
   renderApp();
 });
 
 transactionForm.addEventListener('submit', event => {
   event.preventDefault();
-  const type = document.getElementById('transactionType').value;
-  const amount = parseFloat(document.getElementById('transactionAmount').value);
-  const category = document.getElementById('transactionCategory').value;
-  const date = document.getElementById('transactionDate').value;
-  const description = document.getElementById('transactionDescription').value;
-
-  if (!description.trim()) {
-    showToast('Įvesk aprašymą.', true);
+  if (!validateTransactionForm()) {
+    showToast('Patikrink įrašo laukus.', true);
     return;
   }
-  if (!amount || amount <= 0) {
-    showToast('Suma turi būti didesnė už 0.', true);
+  const type = transactionType.value;
+  const amount = parseFloat(transactionAmountInput.value);
+  const category = transactionCategory.value;
+  const date = dateInput.value;
+  const description = transactionDescriptionInput.value;
+
+  if (editingTransactionId) {
+    updateTransaction(editingTransactionId, { type, amount, category, date, description });
+    stopEditTransaction();
+    showToast('Įrašas sėkmingai atnaujintas.');
     return;
   }
 
   addTransaction({ type, amount, category, date, description });
-  transactionForm.reset();
-  if (transactionType) transactionType.value = 'income';
-  updateCategoryOptions('income');
-  if (dateInput) dateInput.valueAsDate = new Date();
+  stopEditTransaction();
   showToast('Finansinis įrašas pridėtas.');
 });
 
@@ -840,11 +1025,17 @@ transactionList.addEventListener('click', event => {
   const { action, id } = button.dataset;
   if (action === 'delete') {
     deleteTransaction(id);
+    if (editingTransactionId === id) stopEditTransaction();
     showToast('Įrašas ištrintas.');
   }
   if (action === 'toggle') {
     toggleRegistered(id);
     showToast('Įrašo būsena atnaujinta.');
+  }
+  if (action === 'edit') {
+    event.preventDefault();
+    event.stopPropagation();
+    startEditTransaction(id);
   }
 });
 
@@ -894,6 +1085,28 @@ if (themeToggleBtn) {
 
 if (dashboardAdAmount) dashboardAdAmount.addEventListener('input', updateDashboardAdCalculator);
 if (dashboardAdTerm) dashboardAdTerm.addEventListener('input', updateDashboardAdCalculator);
+
+if (emptyStateBtn) {
+  emptyStateBtn.addEventListener('click', () => {
+    if (transactionType) transactionType.value = 'expense';
+    updateCategoryOptions(transactionType?.value || 'expense');
+    focusTransactionForm({ descriptionFirst: false });
+    showToast('Gali iš karto pradėti pildyti naują įrašą.');
+  });
+}
+
+if (cancelEditBtn) {
+  cancelEditBtn.addEventListener('click', () => {
+    stopEditTransaction();
+    showToast('Redagavimas atšauktas.');
+  });
+}
+
+[registerNameInput, registerEmailInput, registerPasswordInput, loginEmailInput, loginPasswordInput, transactionAmountInput, transactionCategory, dateInput, transactionDescriptionInput].forEach(input => {
+  if (!input) return;
+  input.addEventListener('input', () => clearFieldError(input));
+  input.addEventListener('change', () => clearFieldError(input));
+});
 
 document.addEventListener('click', event => {
   const button = event.target.closest('.demo-ad-btn');

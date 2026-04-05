@@ -342,8 +342,12 @@
         <section id="operationsSection" class="content-grid section-anchor">
           <div class="card glass-card form-card">
             <div class="card-header">
-              <h3>Naujas finansinis įrašas</h3>
-              <p>Pridėk pajamas arba išlaidas su visa reikalinga informacija.</p>
+              <h3 id="transactionFormTitle">Naujas finansinis įrašas</h3>
+              <p id="transactionFormSubtitle">Pridėk pajamas arba išlaidas su visa reikalinga informacija.</p>
+            </div>
+            <div id="editNotice" class="edit-notice hidden">
+              <strong>Redagavimo režimas</strong>
+              <span>Atnaujink pasirinktą įrašą ir išsaugok pakeitimus.</span>
             </div>
             <form id="transactionForm" class="form-grid">
               <label>
@@ -377,7 +381,7 @@
                 <span>Aprašymas</span>
                 <input type="text" id="transactionDescription" placeholder="Pvz. Maisto apsipirkimas" required />
               </label>
-              <button type="submit" class="btn btn-primary">Pridėti įrašą</button>
+              <div class="form-actions full-width"><button id="transactionSubmitBtn" type="submit" class="btn btn-primary">Pridėti įrašą</button><button id="cancelEditBtn" type="button" class="btn btn-outline hidden">Atšaukti redagavimą</button></div>
             </form>
           </div>
 
@@ -432,8 +436,10 @@
           </div>
 
           <div id="emptyState" class="empty-state">
+            <div class="empty-state-icon">◎</div>
             <h4>Kol kas įrašų nėra</h4>
             <p>Pridėk pirmą pajamų arba išlaidų įrašą ir sistema iš karto atnaujins statistiką.</p>
+            <button id="emptyStateBtn" type="button" class="btn btn-primary">Pridėti pirmą įrašą</button>
           </div>
 
           <div id="transactionList" class="transaction-list"></div>
