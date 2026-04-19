@@ -4,7 +4,7 @@ localStorage.removeItem('spendsmart_current_user');
 
 // ── Supabase konfigūracija ─────────────────────────────────────
 const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoaGFhanZteXNlaGhlemNtZm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE1ODUsImV4cCI6MjA5MjE3NzU4NX0.32WovgoP_JFAUgft533e5gd2xWHvhdLUU2JoeDFrk7Q';
+const SUPABASE_KEY = 'sb_publishable_kflpygNAqTZ2yUwj8NB88w_CsE9_V13';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Tema išlieka localStorage (tai tik UI nustatymas, ne duomenys)
