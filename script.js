@@ -3,16 +3,143 @@
 const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoaGFhanZteXNlaGhlemNtZm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE1ODUsImV4cCI6MjA5MjE3NzU4NX0.32WovgoP_JFAUgft533e5gd2xWHvhdLUU2JoeDFrk7Q';
 
-// Supabase gali būti window.supabase arba window.supabase.default
-const _supabase = window.supabase.createClient ? window.supabase : window.supabase.default;
-const sb = _supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+// ── Auth per tiesioginius fetch (be Supabase bibliotekos) ──────
+const AUTH_KEY = 'ss_session';
+
+function saveSession(data) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(data));
+}
+
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { return null; }
+}
+
+function clearSession() {
+  localStorage.removeItem(AUTH_KEY);
+}
+
+// Fake sb objektas su tiesioginiais fetch kvietimais
+const sb = {
+  _session: loadSession(),
+
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-    storageKey: 'spendsmart-auth'
+    async signUp({ email, password, options }) {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, data: options?.data || {} })
+      });
+      const data = await res.json();
+      if (!res.ok) return { data: null, error: data };
+      if (data.access_token) { sb._session = data; saveSession(data); }
+      return { data, error: null };
+    },
+
+    async signInWithPassword({ email, password }) {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) return { data: { session: null }, error: data };
+      sb._session = data;
+      saveSession(data);
+      return { data: { session: data, user: data.user }, error: null };
+    },
+
+    async signOut() {
+      const session = loadSession();
+      if (session?.access_token) {
+        await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${session.access_token}` }
+        }).catch(() => {});
+      }
+      sb._session = null;
+      clearSession();
+      currentSession = null;
+      cachedTransactions = [];
+      renderLoggedOut();
+    },
+
+    async getSession() {
+      const session = loadSession();
+      return { data: { session } };
+    },
+
+    onAuthStateChange(callback) {
+      // Iššaukiam iš karto su esama sesija
+      const session = loadSession();
+      setTimeout(() => {
+        callback(session ? 'INITIAL_SESSION' : 'INITIAL_SESSION', session);
+      }, 0);
+      return { data: { subscription: { unsubscribe: () => {} } } };
+    }
+  },
+
+  from(table) {
+    const session = loadSession();
+    const headers = {
+      'apikey': SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session?.access_token || SUPABASE_KEY}`
+    };
+    const base = `${SUPABASE_URL}/rest/v1/${table}`;
+
+    return {
+      select(cols = '*') {
+        return {
+          order(col, { ascending } = {}) { return this; },
+          async then(resolve) {
+            const res = await fetch(`${base}?select=${cols}&order=date.desc`, { headers });
+            const data = await res.json();
+            resolve(res.ok ? { data, error: null } : { data: null, error: data });
+          }
+        };
+      },
+      async insert(row) {
+        const res = await fetch(base, {
+          method: 'POST',
+          headers: { ...headers, 'Prefer': 'return=minimal' },
+          body: JSON.stringify(row)
+        });
+        return res.ok ? { error: null } : { error: await res.json() };
+      },
+      update(fields) {
+        return {
+          eq(col, val) {
+            return {
+              async then(resolve) {
+                const res = await fetch(`${base}?${col}=eq.${val}`, {
+                  method: 'PATCH',
+                  headers: { ...headers, 'Prefer': 'return=minimal' },
+                  body: JSON.stringify(fields)
+                });
+                resolve(res.ok ? { error: null } : { error: await res.json() });
+              }
+            };
+          }
+        };
+      },
+      delete() {
+        return {
+          eq(col, val) {
+            return {
+              async then(resolve) {
+                const res = await fetch(`${base}?${col}=eq.${val}`, {
+                  method: 'DELETE',
+                  headers
+                });
+                resolve(res.ok ? { error: null } : { error: await res.json() });
+              }
+            };
+          }
+        };
+      }
+    };
   }
-});
+};
 
 // Tema išlieka localStorage (tai tik UI nustatymas, ne duomenys)
 const STORAGE_KEYS = { theme: 'spendsmart_theme' };
@@ -204,11 +331,7 @@ window.addEventListener('resize', () => {
 
 // ── Auth funkcijos ─────────────────────────────────────────────
 async function registerUser(name, email, password) {
-  const { data, error } = await sb.auth.signUp({
-    email,
-    password,
-    options: { data: { name } }
-  });
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
   if (error) throw error;
   return data;
 }
@@ -216,6 +339,7 @@ async function registerUser(name, email, password) {
 async function loginUser(email, password) {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  currentSession = data.session;
   return data;
 }
 
@@ -224,7 +348,8 @@ async function logoutUser() {
 }
 
 function getCurrentUserName() {
-  return currentSession?.user?.user_metadata?.name || currentSession?.user?.email || '';
+  const session = loadSession();
+  return session?.user?.user_metadata?.name || session?.user?.email || '';
 }
 
 // ── Transakcijų CRUD per Supabase ─────────────────────────────
@@ -971,19 +1096,11 @@ initTheme();
 updateDashboardAdCalculator();
 startAdRotation();
 
-// onAuthStateChange sugaudo visus įvykius įskaitant INITIAL_SESSION po perkrovimo
-sb.auth.onAuthStateChange(async (event, session) => {
-  currentSession = session;
-  // INITIAL_SESSION – puslapis perkrautas, tikriname ar sesija egzistuoja
-  // SIGNED_IN – vartotojas prisijungė
-  if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    if (session) {
-      await loadAndRenderApp();
-    } else {
-      renderLoggedOut();
-    }
-  } else if (event === 'SIGNED_OUT') {
-    cachedTransactions = [];
-    renderLoggedOut();
-  }
-});
+// Tikriname sesiją iš localStorage iš karto
+const _existingSession = loadSession();
+if (_existingSession && _existingSession.access_token) {
+  currentSession = _existingSession;
+  loadAndRenderApp();
+} else {
+  renderLoggedOut();
+}
