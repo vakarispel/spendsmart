@@ -1,11 +1,20 @@
 // ── Seno localStorage išvalymas ────────────────────────────────
-// Išvalom TIK senus spendsmart duomenis, Supabase sesija lieka
+// Išsaugom Supabase ir temos raktus, viską kitą išvalome
 (function cleanOldStorage() {
   const theme = localStorage.getItem('spendsmart_theme');
-  // Iš localStorage šalinam tik senojo kodo raktus
-  localStorage.removeItem('spendsmart_users');
-  localStorage.removeItem('spendsmart_current_user');
-  // Tema lieka
+  // Surenkam visus Supabase raktus (prasideda su 'sb-')
+  const supabaseKeys = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('sb-')) {
+      supabaseKeys[key] = localStorage.getItem(key);
+    }
+  }
+  // Išvalom viską
+  localStorage.clear();
+  // Grąžinam Supabase raktus
+  Object.entries(supabaseKeys).forEach(([k, v]) => localStorage.setItem(k, v));
+  // Grąžinam temą
   if (theme) localStorage.setItem('spendsmart_theme', theme);
 })();
 
