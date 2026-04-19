@@ -1,3 +1,12 @@
+// ── Seno localStorage išvalymas ────────────────────────────────
+// Išvalom senus localStorage duomenis (vartotojai, transakcijos)
+// Paliekam tik temą
+(function cleanOldStorage() {
+  const theme = localStorage.getItem('spendsmart_theme');
+  localStorage.clear();
+  if (theme) localStorage.setItem('spendsmart_theme', theme);
+})();
+
 // ── Supabase konfigūracija ─────────────────────────────────────
 const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoaGFhanZteXNlaGhlemNtZm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE1ODUsImV4cCI6MjA5MjE3NzU4NX0.32WovgoP_JFAUgft533e5gd2xWHvhdLUU2JoeDFrk7Q';
