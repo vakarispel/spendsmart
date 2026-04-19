@@ -969,12 +969,18 @@ initTheme();
 updateDashboardAdCalculator();
 startAdRotation();
 
-// Klausom Auth pokyčių - onAuthStateChange iššaukiamas ir perkrovus puslapį
+// onAuthStateChange sugaudo visus įvykius įskaitant INITIAL_SESSION po perkrovimo
 sb.auth.onAuthStateChange(async (event, session) => {
   currentSession = session;
-  if (session) {
-    await loadAndRenderApp();
-  } else {
+  // INITIAL_SESSION – puslapis perkrautas, tikriname ar sesija egzistuoja
+  // SIGNED_IN – vartotojas prisijungė
+  if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    if (session) {
+      await loadAndRenderApp();
+    } else {
+      renderLoggedOut();
+    }
+  } else if (event === 'SIGNED_OUT') {
     cachedTransactions = [];
     renderLoggedOut();
   }
