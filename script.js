@@ -1,9 +1,11 @@
-// v4
+// v3
 // ── Supabase konfigūracija ─────────────────────────────────────
 const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoaGFhanZteXNlaGhlemNtZm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE1ODUsImV4cCI6MjA5MjE3NzU4NX0.32WovgoP_JFAUgft533e5gd2xWHvhdLUU2JoeDFrk7Q';
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+// Supabase gali būti window.supabase arba window.supabase.default
+const _supabase = window.supabase.createClient ? window.supabase : window.supabase.default;
+const sb = _supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -972,6 +974,8 @@ startAdRotation();
 // onAuthStateChange sugaudo visus įvykius įskaitant INITIAL_SESSION po perkrovimo
 sb.auth.onAuthStateChange(async (event, session) => {
   currentSession = session;
+  // INITIAL_SESSION – puslapis perkrautas, tikriname ar sesija egzistuoja
+  // SIGNED_IN – vartotojas prisijungė
   if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
     if (session) {
       await loadAndRenderApp();
