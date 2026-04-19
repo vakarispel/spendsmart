@@ -1,10 +1,28 @@
-// v2
-// Seno localStorage išvalymas – šalinam tik spendsmart raktus
-
+// v3
 // ── Supabase konfigūracija ─────────────────────────────────────
 const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoaGFhanZteXNlaGhlemNtZm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE1ODUsImV4cCI6MjA5MjE3NzU4NX0.32WovgoP_JFAUgft533e5gd2xWHvhdLUU2JoeDFrk7Q';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Palaukiam kol Supabase biblioteka pilnai užsikraus
+function waitForSupabase(callback) {
+  if (window.supabase && window.supabase.createClient) {
+    callback();
+  } else {
+    setTimeout(() => waitForSupabase(callback), 50);
+  }
+}
+
+let sb;
+waitForSupabase(() => {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false
+    }
+  });
+  initApp();
+});
 
 // Tema išlieka localStorage (tai tik UI nustatymas, ne duomenys)
 const STORAGE_KEYS = { theme: 'spendsmart_theme' };
@@ -192,27 +210,7 @@ window.addEventListener('resize', () => {
   drawExpenseChart(cachedTransactions);
 });
 
-// ── Supabase Auth klausytojas ──────────────────────────────────
-// Pirma patikrinam ar sesija jau egzistuoja (po puslapio perkrovimo)
-sb.auth.getSession().then(({ data: { session } }) => {
-  if (session) {
-    currentSession = session;
-    loadAndRenderApp();
-  } else {
-    renderLoggedOut();
-  }
-});
-
-// Klausom Auth pokyčių (prisijungimas, atsijungimas)
-sb.auth.onAuthStateChange(async (event, session) => {
-  currentSession = session;
-  if (event === 'SIGNED_IN') {
-    await loadAndRenderApp();
-  } else if (event === 'SIGNED_OUT') {
-    cachedTransactions = [];
-    renderLoggedOut();
-  }
-});
+// Auth inicializacija vyksta initApp() funkcijoje
 
 // ── Auth funkcijos ─────────────────────────────────────────────
 async function registerUser(name, email, password) {
@@ -979,7 +977,29 @@ document.addEventListener('click', event => {
 });
 
 // ── Startas ───────────────────────────────────────────────────
-initTheme();
-updateDashboardAdCalculator();
-startAdRotation();
-// renderApp() nebereikia – onAuthStateChange pasirūpina automatiškai
+function initApp() {
+  initTheme();
+  updateDashboardAdCalculator();
+  startAdRotation();
+
+  // Patikrinam sesiją iš karto
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      currentSession = session;
+      loadAndRenderApp();
+    } else {
+      renderLoggedOut();
+    }
+  });
+
+  // Klausom Auth pokyčių
+  sb.auth.onAuthStateChange(async (event, session) => {
+    currentSession = session;
+    if (event === 'SIGNED_IN') {
+      await loadAndRenderApp();
+    } else if (event === 'SIGNED_OUT') {
+      cachedTransactions = [];
+      renderLoggedOut();
+    }
+  });
+}
