@@ -1,9 +1,12 @@
-const STORAGE_KEYS = {
-  users: 'spendsmart_users',
-  currentUser: 'spendsmart_current_user',
-  theme: 'spendsmart_theme'
-};
+// ── Supabase konfigūracija ─────────────────────────────────────
+const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoaGFhanZteXNlaGhlemNtZm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE1ODUsImV4cCI6MjA5MjE3NzU4NX0.32WovgoP_JFAUgft533e5gd2xWHvhdLUU2JoeDFrk7Q';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Tema išlieka localStorage (tai tik UI nustatymas, ne duomenys)
+const STORAGE_KEYS = { theme: 'spendsmart_theme' };
+
+// ── DOM elementai ──────────────────────────────────────────────
 const authSection = document.getElementById('authSection');
 const dashboardSection = document.getElementById('dashboardSection');
 const sessionActions = document.getElementById('sessionActions');
@@ -33,7 +36,6 @@ const transactionType = document.getElementById('transactionType');
 const transactionCategory = document.getElementById('transactionCategory');
 const navItems = Array.from(document.querySelectorAll('.nav-item'));
 const sectionAnchors = Array.from(document.querySelectorAll('.section-anchor'));
-const demoAdButtons = Array.from(document.querySelectorAll('.demo-ad-btn'));
 
 const transactionAmountInput = document.getElementById('transactionAmount');
 const transactionDescriptionInput = document.getElementById('transactionDescription');
@@ -111,115 +113,186 @@ const CATEGORY_MAP = {
   expense: ['Maistas', 'Transportas', 'Būstas', 'Sąskaitos', 'Mokslai', 'Laisvalaikis', 'Sveikata', 'Kita']
 };
 
-
 const DEMO_ADS = {
   top: [
     {
-      brand: 'PaskolaGo',
-      avatar: '€',
-      url: 'paskolago.lt',
+      brand: 'PaskolaGo', avatar: '€', url: 'paskolago.lt',
       kicker: 'Greita vartojimo paskola',
       title: 'Gauk iki 15 000 € internetu per kelias minutes',
       desc: 'Pateik paraišką nuotoliu, gauk atsakymą greitai ir matyk preliminarias sąlygas be papildomo vizito skyriuje.',
       chips: ['Atsakymas per 2 min.', 'Nuo 8,9% BVKKMN', 'Be užstato'],
-      rating: '4.7/5',
-      reviews: '9 000+ paraiškų',
+      rating: '4.7/5', reviews: '9 000+ paraiškų',
       note: 'Demo reklamos blokas, stilizuotas kaip tikras paskolos pasiūlymas.',
-      metric: 'Iki €15k',
-      ctaPrimary: 'Pildyti paraišką',
-      ctaSecondary: 'Žiūrėti sąlygas'
+      metric: 'Iki €15k', ctaPrimary: 'Pildyti paraišką', ctaSecondary: 'Žiūrėti sąlygas'
     },
     {
-      brand: 'CreditNow',
-      avatar: 'C',
-      url: 'creditnow.lt',
+      brand: 'CreditNow', avatar: 'C', url: 'creditnow.lt',
       kicker: 'Paskola būstui ar remontui',
       title: 'Palygink kredito pasiūlymus ir rask mažesnę mėnesio įmoką',
       desc: 'Vienoje vietoje peržiūrėk kelis pasiūlymus, preliminarią įmoką ir galimą finansavimo sumą pagal tavo poreikį.',
       chips: ['Iki 25 000 €', 'Keli partneriai', 'Paraiška internetu'],
-      rating: '4.8/5',
-      reviews: '11 500+ užklausų',
+      rating: '4.8/5', reviews: '11 500+ užklausų',
       note: 'Šviesus native bannerio stilius sukurtas tam, kad reklama išsiskirtų tamsiame dashboarde.',
-      metric: '€25k',
-      ctaPrimary: 'Gauti pasiūlymą',
-      ctaSecondary: 'Skaičiuoti įmoką'
+      metric: '€25k', ctaPrimary: 'Gauti pasiūlymą', ctaSecondary: 'Skaičiuoti įmoką'
     },
     {
-      brand: 'Lizingas+',
-      avatar: 'L',
-      url: 'lizingasplus.lt',
+      brand: 'Lizingas+', avatar: 'L', url: 'lizingasplus.lt',
       kicker: 'Refinansavimas ir lizingas',
       title: 'Sujunk kelias įmokas į vieną ir paprasčiau planuok mėnesio biudžetą',
       desc: 'Greitas refinansavimo pasiūlymas su aiškia mėnesio įmoka, terminu ir preliminaria bendra kredito kaina.',
       chips: ['Refinansavimas', 'Fiksuota įmoka', 'Atsakymas tą pačią dieną'],
-      rating: '4.6/5',
-      reviews: '6 800+ klientų',
+      rating: '4.6/5', reviews: '6 800+ klientų',
       note: 'Demo reklama su aiškiais CTA ir kredito pasiūlymo stilistika.',
-      metric: '1 įmoka',
-      ctaPrimary: 'Pildyti paraišką',
-      ctaSecondary: 'Peržiūrėti'
+      metric: '1 įmoka', ctaPrimary: 'Pildyti paraišką', ctaSecondary: 'Peržiūrėti'
     }
   ],
   native: [
     {
-      brand: 'RefiPlus',
-      avatar: 'R',
-      url: 'refiplus.lt',
+      brand: 'RefiPlus', avatar: 'R', url: 'refiplus.lt',
       kicker: 'Paskolos refinansavimas',
       title: 'Sujunk įmokas į vieną mokėjimą ir sumažink mėnesio naštą',
       desc: 'Palygink refinansavimo pasiūlymus, gauk individualias sąlygas ir matyk preliminarią mėnesio įmoką iš karto.',
       points: ['Atsakymas per 2 min.', 'Galima mažesnė mėnesio įmoka', 'Paraiška internetu 24/7'],
-      price: 'Nuo 7,9% BVKKMN',
-      rating: '4.6/5',
-      meta: 'Be užstato',
-      meta2: 'Sprendimas internetu',
-      cta: 'Gauti pasiūlymą'
+      price: 'Nuo 7,9% BVKKMN', rating: '4.6/5', meta: 'Be užstato', meta2: 'Sprendimas internetu', cta: 'Gauti pasiūlymą'
     },
     {
-      brand: 'MiniCredit',
-      avatar: 'M',
-      url: 'minicredit.lt',
+      brand: 'MiniCredit', avatar: 'M', url: 'minicredit.lt',
       kicker: 'Trumpalaikė paskola',
       title: 'Skubioms išlaidoms – sprendimas per kelias minutes',
       desc: 'Kai reikia greito finansavimo netikėtoms išlaidoms, pateik paraišką ir peržiūrėk individualų pasiūlymą internetu.',
       points: ['Iki 5 000 €', 'Aiškios sąlygos', 'Greitas atsakymas'],
-      price: 'Iki €5 000',
-      rating: '4.5/5',
-      meta: 'Be popierinių dokumentų',
-      meta2: 'Darbo dienomis greitai',
-      cta: 'Pildyti paraišką'
+      price: 'Iki €5 000', rating: '4.5/5', meta: 'Be popierinių dokumentų', meta2: 'Darbo dienomis greitai', cta: 'Pildyti paraišką'
     },
     {
-      brand: 'HomeLoan',
-      avatar: 'H',
-      url: 'homeloan.lt',
+      brand: 'HomeLoan', avatar: 'H', url: 'homeloan.lt',
       kicker: 'Paskola remontui',
       title: 'Atnaujink namus su lankstesniu finansavimo planu',
       desc: 'Pasitikrink preliminarią paskolos sumą, terminą ir mėnesio įmoką prieš priimdamas sprendimą.',
       points: ['Iki 20 000 €', 'Lankstus terminas', 'Aiški mėnesio įmoka'],
-      price: 'Nuo 119 €/mėn.',
-      rating: '4.8/5',
-      meta: 'Skaičiuoklė internete',
-      meta2: 'Partnerių pasiūlymai',
-      cta: 'Skaičiuoti įmoką'
+      price: 'Nuo 119 €/mėn.', rating: '4.8/5', meta: 'Skaičiuoklė internete', meta2: 'Partnerių pasiūlymai', cta: 'Skaičiuoti įmoką'
     }
   ]
 };
 
+// ── Būsena ────────────────────────────────────────────────────
 const adRotationState = { top: 0, native: 0 };
 let editingTransactionId = null;
+let currentSession = null;       // Supabase sesija
+let cachedTransactions = [];     // Lokalus cache, kad neikartotų fetch'ų
 
+// ── Init ──────────────────────────────────────────────────────
 if (dateInput) dateInput.valueAsDate = new Date();
 updateCategoryOptions(transactionType?.value || 'income');
 
 window.addEventListener('resize', () => {
-  const user = getCurrentUser();
-  if (user) {
-    drawTrendChart(user.transactions || []);
-    drawExpenseChart(user.transactions || []);
+  drawTrendChart(cachedTransactions);
+  drawExpenseChart(cachedTransactions);
+});
+
+// ── Supabase Auth klausytojas ──────────────────────────────────
+sb.auth.onAuthStateChange(async (event, session) => {
+  currentSession = session;
+  if (session) {
+    await loadAndRenderApp();
+  } else {
+    cachedTransactions = [];
+    renderLoggedOut();
   }
 });
 
+// ── Auth funkcijos ─────────────────────────────────────────────
+async function registerUser(name, email, password) {
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password,
+    options: { data: { name } }
+  });
+  if (error) throw error;
+  return data;
+}
+
+async function loginUser(email, password) {
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+async function logoutUser() {
+  await sb.auth.signOut();
+}
+
+function getCurrentUserName() {
+  return currentSession?.user?.user_metadata?.name || currentSession?.user?.email || '';
+}
+
+// ── Transakcijų CRUD per Supabase ─────────────────────────────
+async function fetchTransactions() {
+  const { data, error } = await sb
+    .from('transactions')
+    .select('*')
+    .order('date', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+
+async function insertTransaction(tx) {
+  const { error } = await sb.from('transactions').insert({
+    user_id: currentSession.user.id,
+    type: tx.type,
+    amount: tx.amount,
+    category: tx.category,
+    date: tx.date,
+    description: tx.description,
+    registered: false
+  });
+  if (error) throw error;
+}
+
+async function updateTransactionInDb(id, fields) {
+  const { error } = await sb.from('transactions').update(fields).eq('id', id);
+  if (error) throw error;
+}
+
+async function deleteTransactionInDb(id) {
+  const { error } = await sb.from('transactions').delete().eq('id', id);
+  if (error) throw error;
+}
+
+async function deleteAllTransactions() {
+  const { error } = await sb
+    .from('transactions')
+    .delete()
+    .eq('user_id', currentSession.user.id);
+  if (error) throw error;
+}
+
+// ── Pagrindinis render srautas ─────────────────────────────────
+async function loadAndRenderApp() {
+  cachedTransactions = await fetchTransactions();
+  renderDashboard(cachedTransactions);
+}
+
+function renderLoggedOut() {
+  authSection.classList.remove('hidden');
+  dashboardSection.classList.add('hidden');
+  sessionActions.classList.add('hidden');
+}
+
+function renderDashboard(transactions) {
+  authSection.classList.add('hidden');
+  dashboardSection.classList.remove('hidden');
+  sessionActions.classList.remove('hidden');
+  welcomeText.textContent = `Prisijungęs: ${getCurrentUserName()}`;
+
+  renderTransactions(transactions);
+  updateSummary(transactions);
+  updateInsights(transactions);
+  drawTrendChart(transactions);
+  drawExpenseChart(transactions);
+  updateActiveSectionByScroll();
+}
+
+// ── Reklamos ──────────────────────────────────────────────────
 function renderAdDots(container, items, activeIndex) {
   if (!container) return;
   container.innerHTML = items.map((_, index) => `
@@ -231,7 +304,6 @@ function renderTopAd(index = 0) {
   const ad = DEMO_ADS.top[index];
   const refs = adRefs.top;
   if (!ad || !refs.title) return;
-
   refs.avatar.textContent = ad.avatar;
   refs.brand.textContent = ad.brand;
   refs.url.textContent = ad.url;
@@ -255,7 +327,6 @@ function renderNativeAd(index = 0) {
   const ad = DEMO_ADS.native[index];
   const refs = adRefs.native;
   if (!ad || !refs.title) return;
-
   refs.avatar.textContent = ad.avatar;
   refs.brand.textContent = ad.brand;
   refs.url.textContent = ad.url;
@@ -276,28 +347,43 @@ function renderNativeAd(index = 0) {
 function startAdRotation() {
   renderTopAd(adRotationState.top);
   renderNativeAd(adRotationState.native);
-
   if (startAdRotation.started) return;
   startAdRotation.started = true;
-
-  setInterval(() => {
-    adRotationState.top = (adRotationState.top + 1) % DEMO_ADS.top.length;
-    renderTopAd(adRotationState.top);
-  }, 6500);
-
-  setInterval(() => {
-    adRotationState.native = (adRotationState.native + 1) % DEMO_ADS.native.length;
-    renderNativeAd(adRotationState.native);
-  }, 8200);
+  setInterval(() => { adRotationState.top = (adRotationState.top + 1) % DEMO_ADS.top.length; renderTopAd(adRotationState.top); }, 6500);
+  setInterval(() => { adRotationState.native = (adRotationState.native + 1) % DEMO_ADS.native.length; renderNativeAd(adRotationState.native); }, 8200);
 }
 
+// ── Pagalbinės funkcijos ───────────────────────────────────────
 function formatCompactCurrency(value) {
   return new Intl.NumberFormat('lt-LT', { maximumFractionDigits: 0 }).format(Number(value || 0)) + ' €';
 }
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat('lt-LT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
+}
+
+function formatDate(dateString) {
+  return new Intl.DateTimeFormat('lt-LT', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(dateString));
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function showToast(message, isError = false) {
+  const variant = isError ? 'error' : 'success';
+  const icon = isError ? '⚠' : '✓';
+  toast.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-body"><strong>${isError ? 'Klaida' : 'Pavyko'}</strong><span>${message}</span></div>`;
+  toast.classList.remove('error', 'success');
+  toast.classList.add(variant, 'show');
+  clearTimeout(showToast.timeout);
+  showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
 function updateDashboardAdCalculator() {
   if (!dashboardAdAmount || !dashboardAdTerm) return;
-
   const principal = Number(dashboardAdAmount.value || 5000);
   const months = Number(dashboardAdTerm.value || 48);
   const annualRate = 8.9;
@@ -307,7 +393,6 @@ function updateDashboardAdCalculator() {
     : (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
   const totalPayment = monthlyPayment * months;
   const monthlyLabel = `${formatCompactCurrency(Math.round(monthlyPayment))} / mėn.`;
-
   if (dashboardAdAmountValue) dashboardAdAmountValue.textContent = formatCompactCurrency(principal);
   if (dashboardAdTermValue) dashboardAdTermValue.textContent = `${months} mėn.`;
   if (dashboardAdMonthly) dashboardAdMonthly.textContent = monthlyLabel;
@@ -316,6 +401,7 @@ function updateDashboardAdCalculator() {
   if (dashboardAdRate) dashboardAdRate.textContent = `${annualRate.toFixed(1).replace('.', ',')}%`;
 }
 
+// ── Tema ──────────────────────────────────────────────────────
 function getThemeColors() {
   const styles = getComputedStyle(document.body);
   return {
@@ -341,13 +427,9 @@ function applyTheme(theme) {
   document.body.dataset.theme = safeTheme;
   localStorage.setItem(STORAGE_KEYS.theme, safeTheme);
   updateThemeToggleButton();
-
   if (!dashboardSection.classList.contains('hidden')) {
-    const user = getCurrentUser();
-    if (user) {
-      drawTrendChart(user.transactions || []);
-      drawExpenseChart(user.transactions || []);
-    }
+    drawTrendChart(cachedTransactions);
+    drawExpenseChart(cachedTransactions);
   }
 }
 
@@ -356,63 +438,11 @@ function initTheme() {
   applyTheme(savedTheme);
 }
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEYS.users) || '[]');
-}
-
-function saveUsers(users) {
-  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(users));
-}
-
-function getCurrentUserEmail() {
-  return localStorage.getItem(STORAGE_KEYS.currentUser);
-}
-
-function setCurrentUserEmail(email) {
-  localStorage.setItem(STORAGE_KEYS.currentUser, email);
-}
-
-function clearCurrentUserEmail() {
-  localStorage.removeItem(STORAGE_KEYS.currentUser);
-}
-
-function findUserByEmail(email) {
-  return getUsers().find(user => user.email.toLowerCase() === email.toLowerCase());
-}
-
-function updateUser(updatedUser) {
-  const users = getUsers().map(user => user.email === updatedUser.email ? updatedUser : user);
-  saveUsers(users);
-}
-
-function getCurrentUser() {
-  const email = getCurrentUserEmail();
-  if (!email) return null;
-  return findUserByEmail(email) || null;
-}
-
-function formatCurrency(value) {
-  return new Intl.NumberFormat('lt-LT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
-}
-
-function showToast(message, isError = false) {
-  const variant = isError ? 'error' : 'success';
-  const icon = isError ? '⚠' : '✓';
-  toast.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-body"><strong>${isError ? 'Klaida' : 'Pavyko'}</strong><span>${message}</span></div>`;
-  toast.classList.remove('error', 'success');
-  toast.classList.add(variant, 'show');
-  clearTimeout(showToast.timeout);
-  showToast.timeout = setTimeout(() => toast.classList.remove('show'), 2800);
-}
-
+// ── Validacija ─────────────────────────────────────────────────
 function ensureErrorNode(input) {
   if (!input) return null;
   let node = input.parentElement.querySelector('.field-error');
-  if (!node) {
-    node = document.createElement('small');
-    node.className = 'field-error';
-    input.parentElement.appendChild(node);
-  }
+  if (!node) { node = document.createElement('small'); node.className = 'field-error'; input.parentElement.appendChild(node); }
   return node;
 }
 
@@ -441,22 +471,9 @@ function validateRegisterForm() {
   const name = registerNameInput.value.trim();
   const email = registerEmailInput.value.trim();
   const password = registerPasswordInput.value;
-
-  if (name.length < 2) {
-    setFieldError(registerNameInput, 'Įvesk bent 2 simbolių vardą.');
-    valid = false;
-  }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    setFieldError(registerEmailInput, 'Įvesk teisingą el. pašto adresą.');
-    valid = false;
-  } else if (findUserByEmail(email)) {
-    setFieldError(registerEmailInput, 'Toks vartotojas jau egzistuoja.');
-    valid = false;
-  }
-  if (!password || password.length < 6) {
-    setFieldError(registerPasswordInput, 'Slaptažodis turi būti bent 6 simbolių.');
-    valid = false;
-  }
+  if (name.length < 2) { setFieldError(registerNameInput, 'Įvesk bent 2 simbolių vardą.'); valid = false; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFieldError(registerEmailInput, 'Įvesk teisingą el. pašto adresą.'); valid = false; }
+  if (!password || password.length < 6) { setFieldError(registerPasswordInput, 'Slaptažodis turi būti bent 6 simbolių.'); valid = false; }
   return valid;
 }
 
@@ -465,14 +482,8 @@ function validateLoginForm() {
   let valid = true;
   const email = loginEmailInput.value.trim();
   const password = loginPasswordInput.value;
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    setFieldError(loginEmailInput, 'Įvesk teisingą el. pašto adresą.');
-    valid = false;
-  }
-  if (!password) {
-    setFieldError(loginPasswordInput, 'Įvesk slaptažodį.');
-    valid = false;
-  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setFieldError(loginEmailInput, 'Įvesk teisingą el. pašto adresą.'); valid = false; }
+  if (!password) { setFieldError(loginPasswordInput, 'Įvesk slaptažodį.'); valid = false; }
   return valid;
 }
 
@@ -483,26 +494,21 @@ function validateTransactionForm() {
   const description = transactionDescriptionInput.value.trim();
   const category = transactionCategory.value;
   const date = dateInput.value;
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    setFieldError(transactionAmountInput, 'Suma turi būti didesnė už 0.');
-    valid = false;
-  }
-  if (!category) {
-    setFieldError(transactionCategory, 'Pasirink kategoriją.');
-    valid = false;
-  }
-  if (!date) {
-    setFieldError(dateInput, 'Pasirink datą.');
-    valid = false;
-  }
-  if (description.length < 3) {
-    setFieldError(transactionDescriptionInput, 'Aprašymas turi būti bent 3 simbolių.');
-    valid = false;
-  }
+  if (!Number.isFinite(amount) || amount <= 0) { setFieldError(transactionAmountInput, 'Suma turi būti didesnė už 0.'); valid = false; }
+  if (!category) { setFieldError(transactionCategory, 'Pasirink kategoriją.'); valid = false; }
+  if (!date) { setFieldError(dateInput, 'Pasirink datą.'); valid = false; }
+  if (description.length < 3) { setFieldError(transactionDescriptionInput, 'Aprašymas turi būti bent 3 simbolių.'); valid = false; }
   return valid;
 }
 
+// ── Formos UI pagalbinės ───────────────────────────────────────
+function updateCategoryOptions(type) {
+  if (!transactionCategory) return;
+  const categories = CATEGORY_MAP[type] || CATEGORY_MAP.expense;
+  const current = transactionCategory.value;
+  transactionCategory.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+  if (categories.includes(current)) transactionCategory.value = current;
+}
 
 function focusTransactionForm({ descriptionFirst = false } = {}) {
   scrollToSection('operationsSection');
@@ -514,12 +520,7 @@ function focusTransactionForm({ descriptionFirst = false } = {}) {
     focusTransactionForm.flashTimeout = setTimeout(() => formCard.classList.remove('focus-flash'), 1400);
   }
   const target = descriptionFirst ? transactionDescriptionInput : transactionAmountInput;
-  setTimeout(() => {
-    if (target) {
-      target.focus();
-      target.select?.();
-    }
-  }, 380);
+  setTimeout(() => { if (target) { target.focus(); target.select?.(); } }, 380);
 }
 
 function setEditMode(isEditing) {
@@ -534,9 +535,7 @@ function setEditMode(isEditing) {
 }
 
 function startEditTransaction(id) {
-  const user = getCurrentUser();
-  if (!user) return;
-  const item = (user.transactions || []).find(entry => entry.id === id);
+  const item = cachedTransactions.find(t => t.id === id);
   if (!item) return;
   editingTransactionId = id;
   transactionType.value = item.type;
@@ -545,7 +544,7 @@ function startEditTransaction(id) {
   transactionCategory.value = item.category;
   dateInput.value = item.date;
   transactionDescriptionInput.value = item.description;
-  renderTransactions(user.transactions || []);
+  renderTransactions(cachedTransactions);
   setEditMode(true);
   focusTransactionForm();
   showToast('Įrašas paruoštas redagavimui.');
@@ -561,28 +560,7 @@ function stopEditTransaction() {
   clearFormErrors(transactionForm);
 }
 
-function updateTransaction(id, data) {
-  const user = getCurrentUser();
-  if (!user) return;
-  user.transactions = (user.transactions || []).map(item => item.id === id ? { ...item, ...data, amount: Number(data.amount), description: data.description.trim() } : item);
-  updateUser(user);
-  renderApp();
-}
-
-function hashPassword(password) {
-  return btoa(unescape(encodeURIComponent(password)));
-}
-
-function updateCategoryOptions(type) {
-  if (!transactionCategory) return;
-  const categories = CATEGORY_MAP[type] || CATEGORY_MAP.expense;
-  const current = transactionCategory.value;
-  transactionCategory.innerHTML = categories
-    .map(category => `<option value="${category}">${category}</option>`)
-    .join('');
-  if (categories.includes(current)) transactionCategory.value = current;
-}
-
+// ── Navigacija ─────────────────────────────────────────────────
 function setActiveNav(targetId) {
   navItems.forEach(item => item.classList.toggle('active', item.dataset.target === targetId));
 }
@@ -604,87 +582,14 @@ function updateActiveSectionByScroll() {
   setActiveNav(currentId);
 }
 
-function renderApp() {
-  const user = getCurrentUser();
-
-  if (!user) {
-    authSection.classList.remove('hidden');
-    dashboardSection.classList.add('hidden');
-    sessionActions.classList.add('hidden');
-    return;
-  }
-
-  authSection.classList.add('hidden');
-  dashboardSection.classList.remove('hidden');
-  sessionActions.classList.remove('hidden');
-  welcomeText.textContent = `Prisijungęs: ${user.name}`;
-
-  const transactions = user.transactions || [];
-  renderTransactions(transactions);
-  updateSummary(transactions);
-  updateInsights(transactions);
-  drawTrendChart(transactions);
-  drawExpenseChart(transactions);
-  updateActiveSectionByScroll();
-}
-
-function updateSummary(transactions) {
-  const income = transactions.filter(item => item.type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
-  const expense = transactions.filter(item => item.type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
-  const balance = income - expense;
-
-  totals.income.textContent = formatCurrency(income);
-  totals.expense.textContent = formatCurrency(expense);
-  totals.balance.textContent = formatCurrency(balance);
-  totals.heroBalance.textContent = formatCurrency(balance);
-  totals.count.textContent = String(transactions.length);
-
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const monthTransactions = transactions.filter(item => {
-    const date = new Date(item.date);
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-  });
-
-  const monthIncome = monthTransactions.filter(item => item.type === 'income').reduce((sum, item) => sum + Number(item.amount), 0);
-  const monthExpense = monthTransactions.filter(item => item.type === 'expense').reduce((sum, item) => sum + Number(item.amount), 0);
-  const monthDiff = monthIncome - monthExpense;
-
-  totals.monthlyDifference.textContent = `Šį mėnesį pokytis ${formatCurrency(monthDiff)}`;
-  totals.currentMonthIncome.textContent = formatCurrency(monthIncome);
-  totals.currentMonthExpense.textContent = formatCurrency(monthExpense);
-  if (totals.sidebarGoal) totals.sidebarGoal.textContent = formatCurrency(monthDiff);
-  if (totals.goalText) {
-    totals.goalText.textContent = monthDiff >= 0
-      ? 'Šį mėnesį pajamos viršija išlaidas.'
-      : 'Šį mėnesį išlaidos viršija pajamas.';
-  }
-}
-
-function updateInsights(transactions) {
-  const expensesByCategory = {};
-  transactions.filter(item => item.type === 'expense').forEach(item => {
-    expensesByCategory[item.category] = (expensesByCategory[item.category] || 0) + Number(item.amount);
-  });
-
-  const topCategoryEntry = Object.entries(expensesByCategory).sort((a, b) => b[1] - a[1])[0];
-  totals.topCategory.textContent = topCategoryEntry ? `${topCategoryEntry[0]} • ${formatCurrency(topCategoryEntry[1])}` : 'Nėra duomenų';
-
-  const latest = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-  totals.lastTransaction.textContent = latest ? `${latest.description} • ${formatCurrency(latest.amount)}` : 'Nėra įrašų';
-}
-
+// ── Transakcijų render ─────────────────────────────────────────
 function getFilteredTransactions(transactions) {
   const selectedType = filterType.value;
   const searchValue = searchInput.value.trim().toLowerCase();
-
   return transactions.filter(item => {
     const typeMatch = selectedType === 'all' || item.type === selectedType;
     const text = `${item.description} ${item.category}`.toLowerCase();
-    const searchMatch = !searchValue || text.includes(searchValue);
-    return typeMatch && searchMatch;
+    return typeMatch && (!searchValue || text.includes(searchValue));
   }).sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
@@ -692,11 +597,9 @@ function renderTransactions(transactions) {
   const filtered = getFilteredTransactions(transactions);
   transactionList.innerHTML = '';
   emptyState.classList.toggle('hidden', filtered.length > 0);
-
   filtered.forEach(item => {
     const wrapper = document.createElement('article');
     wrapper.className = `transaction-item ${editingTransactionId === item.id ? 'editing' : ''}`;
-
     wrapper.innerHTML = `
       <div class="transaction-badge ${item.type}">${item.type === 'income' ? '+' : '-'}</div>
       <div class="transaction-main">
@@ -719,57 +622,49 @@ function renderTransactions(transactions) {
         </div>
       </div>
     `;
-
     transactionList.appendChild(wrapper);
   });
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+// ── Suvestinė ─────────────────────────────────────────────────
+function updateSummary(transactions) {
+  const income = transactions.filter(i => i.type === 'income').reduce((s, i) => s + Number(i.amount), 0);
+  const expense = transactions.filter(i => i.type === 'expense').reduce((s, i) => s + Number(i.amount), 0);
+  const balance = income - expense;
+  totals.income.textContent = formatCurrency(income);
+  totals.expense.textContent = formatCurrency(expense);
+  totals.balance.textContent = formatCurrency(balance);
+  totals.heroBalance.textContent = formatCurrency(balance);
+  totals.count.textContent = String(transactions.length);
+
+  const now = new Date();
+  const monthTx = transactions.filter(i => {
+    const d = new Date(i.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const mIncome = monthTx.filter(i => i.type === 'income').reduce((s, i) => s + Number(i.amount), 0);
+  const mExpense = monthTx.filter(i => i.type === 'expense').reduce((s, i) => s + Number(i.amount), 0);
+  const mDiff = mIncome - mExpense;
+
+  totals.monthlyDifference.textContent = `Šį mėnesį pokytis ${formatCurrency(mDiff)}`;
+  totals.currentMonthIncome.textContent = formatCurrency(mIncome);
+  totals.currentMonthExpense.textContent = formatCurrency(mExpense);
+  if (totals.sidebarGoal) totals.sidebarGoal.textContent = formatCurrency(mDiff);
+  if (totals.goalText) totals.goalText.textContent = mDiff >= 0 ? 'Šį mėnesį pajamos viršija išlaidas.' : 'Šį mėnesį išlaidos viršija pajamas.';
 }
 
-function formatDate(dateString) {
-  return new Intl.DateTimeFormat('lt-LT', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(dateString));
+function updateInsights(transactions) {
+  const byCategory = {};
+  transactions.filter(i => i.type === 'expense').forEach(i => {
+    byCategory[i.category] = (byCategory[i.category] || 0) + Number(i.amount);
+  });
+  const top = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+  totals.topCategory.textContent = top ? `${top[0]} • ${formatCurrency(top[1])}` : 'Nėra duomenų';
+  const latest = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+  totals.lastTransaction.textContent = latest ? `${latest.description} • ${formatCurrency(latest.amount)}` : 'Nėra įrašų';
 }
 
-function addTransaction(data) {
-  const user = getCurrentUser();
-  if (!user) return;
-
-  const transaction = {
-    id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-    type: data.type,
-    amount: Number(data.amount),
-    category: data.category,
-    date: data.date,
-    description: data.description.trim(),
-    registered: false
-  };
-
-  user.transactions = [...(user.transactions || []), transaction];
-  updateUser(user);
-  renderApp();
-}
-
-function deleteTransaction(id) {
-  const user = getCurrentUser();
-  if (!user) return;
-  user.transactions = (user.transactions || []).filter(item => item.id !== id);
-  updateUser(user);
-  renderApp();
-}
-
-function toggleRegistered(id) {
-  const user = getCurrentUser();
-  if (!user) return;
-  user.transactions = (user.transactions || []).map(item => item.id === id ? { ...item, registered: !item.registered } : item);
-  updateUser(user);
-  renderApp();
-}
-
-
+// ── Diagramos ─────────────────────────────────────────────────
 function drawTrendChart(transactions) {
   if (!trendCanvas) return;
   const ctx = trendCanvas.getContext('2d');
@@ -780,34 +675,23 @@ function drawTrendChart(transactions) {
   trendCanvas.height = height * ratio;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.clearRect(0, 0, width, height);
-
   drawChartBackground(ctx, width, height);
 
   const grouped = {};
-  transactions.filter(item => item.type === 'expense').forEach(item => {
-    grouped[item.category] = (grouped[item.category] || 0) + Number(item.amount);
-  });
-
+  transactions.filter(i => i.type === 'expense').forEach(i => { grouped[i.category] = (grouped[i.category] || 0) + Number(i.amount); });
   let entries = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
   if (entries.length > 5) {
     const top = entries.slice(0, 4);
-    const restSum = entries.slice(4).reduce((sum, [, value]) => sum + value, 0);
+    const restSum = entries.slice(4).reduce((s, [, v]) => s + v, 0);
     top.push(['Kita', restSum]);
     entries = top;
   }
-
-  drawDonutChart(
-    ctx,
-    width,
-    height,
-    entries,
-    {
-      emptyText: 'Kol kas nėra išlaidų duomenų pie chart atvaizdavimui.',
-      centerLabel: 'Išlaidos',
-      centerValue: formatCurrency(entries.reduce((sum, [, value]) => sum + value, 0)),
-      colors: ['#5f7bff', '#24c78a', '#ffb44f', '#ff7d66', '#8d75ff', '#5ed0f4']
-    }
-  );
+  drawDonutChart(ctx, width, height, entries, {
+    emptyText: 'Kol kas nėra išlaidų duomenų pie chart atvaizdavimui.',
+    centerLabel: 'Išlaidos',
+    centerValue: formatCurrency(entries.reduce((s, [, v]) => s + v, 0)),
+    colors: ['#5f7bff', '#24c78a', '#ffb44f', '#ff7d66', '#8d75ff', '#5ed0f4']
+  });
 }
 
 function drawExpenseChart(transactions) {
@@ -820,32 +704,17 @@ function drawExpenseChart(transactions) {
   expenseCanvas.height = height * ratio;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   ctx.clearRect(0, 0, width, height);
-
   drawChartBackground(ctx, width, height);
 
-  const income = transactions
-    .filter(item => item.type === 'income')
-    .reduce((sum, item) => sum + Number(item.amount), 0);
-  const expense = transactions
-    .filter(item => item.type === 'expense')
-    .reduce((sum, item) => sum + Number(item.amount), 0);
-
-  drawDonutChart(
-    ctx,
-    width,
-    height,
-    [
-      ['Pajamos', income],
-      ['Išlaidos', expense]
-    ],
-    {
-      emptyText: 'Kol kas nėra duomenų santykio diagramai.',
-      centerLabel: 'Balansas',
-      centerValue: formatCurrency(income - expense),
-      colors: ['#22c07d', '#f26b6b'],
-      compact: true
-    }
-  );
+  const income = transactions.filter(i => i.type === 'income').reduce((s, i) => s + Number(i.amount), 0);
+  const expense = transactions.filter(i => i.type === 'expense').reduce((s, i) => s + Number(i.amount), 0);
+  drawDonutChart(ctx, width, height, [['Pajamos', income], ['Išlaidos', expense]], {
+    emptyText: 'Kol kas nėra duomenų santykio diagramai.',
+    centerLabel: 'Balansas',
+    centerValue: formatCurrency(income - expense),
+    colors: ['#22c07d', '#f26b6b'],
+    compact: true
+  });
 }
 
 function drawDonutChart(ctx, width, height, entries, options = {}) {
@@ -857,10 +726,8 @@ function drawDonutChart(ctx, width, height, entries, options = {}) {
     ctx.fillText(options.emptyText || 'Nėra duomenų.', 22, 42);
     return;
   }
-
-  const total = validEntries.reduce((sum, [, value]) => sum + Number(value), 0);
+  const total = validEntries.reduce((s, [, v]) => s + Number(v), 0);
   const colors = options.colors || ['#6c8cff', '#22c07d', '#f4bf59', '#f26b6b', '#8e7dff'];
-
   const compact = Boolean(options.compact);
   const centerX = compact ? width * 0.34 : width * 0.30;
   const centerY = height * 0.54;
@@ -868,24 +735,15 @@ function drawDonutChart(ctx, width, height, entries, options = {}) {
   const innerRadius = outerRadius * 0.58;
 
   let startAngle = -Math.PI / 2;
-  validEntries.forEach(([label, value], index) => {
+  validEntries.forEach(([, value], index) => {
     const sliceAngle = (Number(value) / total) * Math.PI * 2;
     const endAngle = startAngle + sliceAngle;
-
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, outerRadius, startAngle, endAngle);
-    ctx.closePath();
-    ctx.fillStyle = colors[index % colors.length];
-    ctx.fill();
-
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
     ctx.arc(centerX, centerY, outerRadius, startAngle + 0.012, endAngle - 0.012);
     ctx.closePath();
     ctx.fillStyle = colors[index % colors.length];
     ctx.fill();
-
     startAngle = endAngle;
   });
 
@@ -907,23 +765,18 @@ function drawDonutChart(ctx, width, height, entries, options = {}) {
 
   const legendX = compact ? width * 0.62 : width * 0.60;
   let legendY = compact ? 44 : 38;
-
   ctx.textAlign = 'left';
   validEntries.forEach(([label, value], index) => {
     const color = colors[index % colors.length];
-
     ctx.fillStyle = color;
     roundRect(ctx, legendX, legendY, 12, 12, 4, true, false);
-
     ctx.fillStyle = theme.text;
     ctx.font = '13px Inter';
     ctx.fillText(label, legendX + 20, legendY + 10);
-
     const percent = ((Number(value) / total) * 100).toFixed(0);
     ctx.fillStyle = theme.muted;
     ctx.font = '12px Inter';
     ctx.fillText(`${formatCurrency(value)} • ${percent}%`, legendX + 20, legendY + 28);
-
     legendY += 44;
   });
 }
@@ -951,135 +804,130 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
   if (stroke) ctx.stroke();
 }
 
-registerForm.addEventListener('submit', event => {
+// ── Event listeners ───────────────────────────────────────────
+
+// Registracija
+registerForm.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!validateRegisterForm()) {
-    showToast('Patikrink registracijos laukus.', true);
-    return;
-  }
+  if (!validateRegisterForm()) { showToast('Patikrink registracijos laukus.', true); return; }
   const name = registerNameInput.value.trim();
   const email = registerEmailInput.value.trim();
   const password = registerPasswordInput.value;
-
-  const users = getUsers();
-  users.push({ name, email, password: hashPassword(password), transactions: [] });
-  saveUsers(users);
-  setCurrentUserEmail(email);
-  registerForm.reset();
-  clearFormErrors(registerForm);
-  showToast('Registracija sėkminga. Tu jau prisijungęs.');
-  renderApp();
+  try {
+    await registerUser(name, email, password);
+    registerForm.reset();
+    clearFormErrors(registerForm);
+    showToast('Registracija sėkminga! Dabar prisijunk.');
+  } catch (err) {
+    const msg = err.message.includes('already') ? 'Toks el. paštas jau užregistruotas.' : err.message;
+    setFieldError(registerEmailInput, msg);
+    showToast('Registracija nepavyko.', true);
+  }
 });
 
-loginForm.addEventListener('submit', event => {
+// Prisijungimas
+loginForm.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!validateLoginForm()) {
-    showToast('Patikrink prisijungimo duomenis.', true);
-    return;
-  }
+  if (!validateLoginForm()) { showToast('Patikrink prisijungimo duomenis.', true); return; }
   const email = loginEmailInput.value.trim();
   const password = loginPasswordInput.value;
-  const user = findUserByEmail(email);
-
-  if (!user || user.password !== hashPassword(password)) {
+  try {
+    await loginUser(email, password);
+    loginForm.reset();
+    clearFormErrors(loginForm);
+    showToast('Prisijungimas sėkmingas.');
+  } catch (err) {
     setFieldError(loginPasswordInput, 'Neteisingas el. paštas arba slaptažodis.');
     showToast('Neteisingi prisijungimo duomenys.', true);
-    return;
   }
-
-  setCurrentUserEmail(user.email);
-  loginForm.reset();
-  clearFormErrors(loginForm);
-  showToast('Prisijungimas sėkmingas.');
-  renderApp();
 });
 
-transactionForm.addEventListener('submit', event => {
+// Transakcijų forma
+transactionForm.addEventListener('submit', async event => {
   event.preventDefault();
-  if (!validateTransactionForm()) {
-    showToast('Patikrink įrašo laukus.', true);
-    return;
-  }
+  if (!validateTransactionForm()) { showToast('Patikrink įrašo laukus.', true); return; }
   const type = transactionType.value;
   const amount = parseFloat(transactionAmountInput.value);
   const category = transactionCategory.value;
   const date = dateInput.value;
   const description = transactionDescriptionInput.value;
 
-  if (editingTransactionId) {
-    updateTransaction(editingTransactionId, { type, amount, category, date, description });
+  try {
+    if (editingTransactionId) {
+      await updateTransactionInDb(editingTransactionId, { type, amount, category, date, description: description.trim() });
+      showToast('Įrašas sėkmingai atnaujintas.');
+    } else {
+      await insertTransaction({ type, amount, category, date, description });
+      showToast('Finansinis įrašas pridėtas.');
+    }
     stopEditTransaction();
-    showToast('Įrašas sėkmingai atnaujintas.');
-    return;
+    await loadAndRenderApp();
+  } catch (err) {
+    showToast('Nepavyko išsaugoti įrašo.', true);
   }
-
-  addTransaction({ type, amount, category, date, description });
-  stopEditTransaction();
-  showToast('Finansinis įrašas pridėtas.');
 });
 
-transactionList.addEventListener('click', event => {
+// Transakcijų sąrašo mygtukai
+transactionList.addEventListener('click', async event => {
   const button = event.target.closest('button[data-action]');
   if (!button) return;
-
   const { action, id } = button.dataset;
-  if (action === 'delete') {
-    deleteTransaction(id);
-    if (editingTransactionId === id) stopEditTransaction();
-    showToast('Įrašas ištrintas.');
-  }
-  if (action === 'toggle') {
-    toggleRegistered(id);
-    showToast('Įrašo būsena atnaujinta.');
-  }
-  if (action === 'edit') {
-    event.preventDefault();
-    event.stopPropagation();
-    startEditTransaction(id);
+  try {
+    if (action === 'delete') {
+      if (editingTransactionId === id) stopEditTransaction();
+      await deleteTransactionInDb(id);
+      showToast('Įrašas ištrintas.');
+      await loadAndRenderApp();
+    }
+    if (action === 'toggle') {
+      const tx = cachedTransactions.find(t => t.id === id);
+      if (tx) await updateTransactionInDb(id, { registered: !tx.registered });
+      showToast('Įrašo būsena atnaujinta.');
+      await loadAndRenderApp();
+    }
+    if (action === 'edit') {
+      event.preventDefault();
+      event.stopPropagation();
+      startEditTransaction(id);
+    }
+  } catch (err) {
+    showToast('Klaida atliekant veiksmą.', true);
   }
 });
 
-filterType.addEventListener('change', () => {
-  const user = getCurrentUser();
-  if (user) renderTransactions(user.transactions || []);
-});
+// Filtrai
+filterType.addEventListener('change', () => renderTransactions(cachedTransactions));
+searchInput.addEventListener('input', () => renderTransactions(cachedTransactions));
 
-searchInput.addEventListener('input', () => {
-  const user = getCurrentUser();
-  if (user) renderTransactions(user.transactions || []);
-});
-
-logoutBtn.addEventListener('click', () => {
-  clearCurrentUserEmail();
+// Atsijungimas
+async function handleLogout() {
+  await logoutUser();
   showToast('Sėkmingai atsijungei.');
-  renderApp();
-});
-
-clearAllBtn.addEventListener('click', () => {
-  const user = getCurrentUser();
-  if (!user) return;
-  if (!confirm('Ar tikrai nori ištrinti visus įrašus?')) return;
-
-  user.transactions = [];
-  updateUser(user);
-  renderApp();
-  showToast('Visi įrašai ištrinti.');
-});
-
-if (transactionType) {
-  transactionType.addEventListener('change', () => updateCategoryOptions(transactionType.value));
 }
+if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+if (sidebarLogoutBtn) sidebarLogoutBtn.addEventListener('click', handleLogout);
 
-navItems.forEach(item => {
-  item.addEventListener('click', () => scrollToSection(item.dataset.target));
+// Ištrinti viską
+clearAllBtn.addEventListener('click', async () => {
+  if (!currentSession) return;
+  if (!confirm('Ar tikrai nori ištrinti visus įrašus?')) return;
+  try {
+    await deleteAllTransactions();
+    showToast('Visi įrašai ištrinti.');
+    await loadAndRenderApp();
+  } catch (err) {
+    showToast('Nepavyko ištrinti įrašų.', true);
+  }
 });
 
+// Kiti
+if (transactionType) transactionType.addEventListener('change', () => updateCategoryOptions(transactionType.value));
+navItems.forEach(item => item.addEventListener('click', () => scrollToSection(item.dataset.target)));
 window.addEventListener('scroll', updateActiveSectionByScroll);
 
 if (themeToggleBtn) {
   themeToggleBtn.addEventListener('click', () => {
-    const nextTheme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
-    applyTheme(nextTheme);
+    applyTheme(document.body.dataset.theme === 'light' ? 'dark' : 'light');
   });
 }
 
@@ -1102,7 +950,8 @@ if (cancelEditBtn) {
   });
 }
 
-[registerNameInput, registerEmailInput, registerPasswordInput, loginEmailInput, loginPasswordInput, transactionAmountInput, transactionCategory, dateInput, transactionDescriptionInput].forEach(input => {
+[registerNameInput, registerEmailInput, registerPasswordInput, loginEmailInput, loginPasswordInput,
+ transactionAmountInput, transactionCategory, dateInput, transactionDescriptionInput].forEach(input => {
   if (!input) return;
   input.addEventListener('input', () => clearFieldError(input));
   input.addEventListener('change', () => clearFieldError(input));
@@ -1112,18 +961,11 @@ document.addEventListener('click', event => {
   const button = event.target.closest('.demo-ad-btn');
   if (!button) return;
   const adName = button.dataset.adName || 'partnerio pasiūlymas';
-  showToast(`Atidaryta demonstracinė reklama: ${adName}. Čia vėliau galima įkelti tikrą reklamos tinklo kodą.`);
+  showToast(`Atidaryta demonstracinė reklama: ${adName}.`);
 });
 
-if (sidebarLogoutBtn) {
-  sidebarLogoutBtn.addEventListener('click', () => {
-    clearCurrentUserEmail();
-    showToast('Sėkmingai atsijungei.');
-    renderApp();
-  });
-}
-
+// ── Startas ───────────────────────────────────────────────────
 initTheme();
 updateDashboardAdCalculator();
 startAdRotation();
-renderApp();
+// renderApp() nebereikia – onAuthStateChange pasirūpina automatiškai
