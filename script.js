@@ -965,11 +965,19 @@ loginForm.addEventListener('submit', async event => {
   const email = loginEmailInput.value.trim();
   const password = loginPasswordInput.value;
   try {
-    await loginUser(email, password);
+    const loginData = await loginUser(email, password);
+    // Tiesiogiai nustatome sesiją iš atsakymo
+    const rawSession = loadSession();
+    currentSession = rawSession;
     loginForm.reset();
     clearFormErrors(loginForm);
     showToast('Prisijungimas sėkmingas.');
-    await loadAndRenderApp();
+    // Pirmiausia parodome dashboard, tada krauname transakcijas
+    cachedTransactions = [];
+    renderDashboard([]);
+    const txs = await fetchTransactions();
+    cachedTransactions = txs;
+    renderDashboard(txs);
   } catch (err) {
     setFieldError(loginPasswordInput, 'Neteisingas el. paštas arba slaptažodis.');
     showToast('Neteisingi prisijungimo duomenys.', true);
