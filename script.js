@@ -3,25 +3,13 @@
 const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVoaGFhanZteXNlaGhlemNtZm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDE1ODUsImV4cCI6MjA5MjE3NzU4NX0.32WovgoP_JFAUgft533e5gd2xWHvhdLUU2JoeDFrk7Q';
 
-// Palaukiam kol Supabase biblioteka pilnai užsikraus
-function waitForSupabase(callback) {
-  if (window.supabase && window.supabase.createClient) {
-    callback();
-  } else {
-    setTimeout(() => waitForSupabase(callback), 50);
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+    storageKey: 'spendsmart-auth'
   }
-}
-
-let sb;
-waitForSupabase(() => {
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: false
-    }
-  });
-  initApp();
 });
 
 // Tema išlieka localStorage (tai tik UI nustatymas, ne duomenys)
@@ -977,29 +965,17 @@ document.addEventListener('click', event => {
 });
 
 // ── Startas ───────────────────────────────────────────────────
-function initApp() {
-  initTheme();
-  updateDashboardAdCalculator();
-  startAdRotation();
+initTheme();
+updateDashboardAdCalculator();
+startAdRotation();
 
-  // Patikrinam sesiją iš karto
-  sb.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      currentSession = session;
-      loadAndRenderApp();
-    } else {
-      renderLoggedOut();
-    }
-  });
-
-  // Klausom Auth pokyčių
-  sb.auth.onAuthStateChange(async (event, session) => {
-    currentSession = session;
-    if (event === 'SIGNED_IN') {
-      await loadAndRenderApp();
-    } else if (event === 'SIGNED_OUT') {
-      cachedTransactions = [];
-      renderLoggedOut();
-    }
-  });
-}
+// Klausom Auth pokyčių - onAuthStateChange iššaukiamas ir perkrovus puslapį
+sb.auth.onAuthStateChange(async (event, session) => {
+  currentSession = session;
+  if (session) {
+    await loadAndRenderApp();
+  } else {
+    cachedTransactions = [];
+    renderLoggedOut();
+  }
+});
