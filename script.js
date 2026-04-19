@@ -1,7 +1,5 @@
 // v2
 // Seno localStorage išvalymas – šalinam tik spendsmart raktus
-localStorage.removeItem('spendsmart_users');
-localStorage.removeItem('spendsmart_current_user');
 
 // ── Supabase konfigūracija ─────────────────────────────────────
 const SUPABASE_URL = 'https://uhhaajvmysehhezcmfmn.supabase.co';
