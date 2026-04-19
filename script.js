@@ -339,6 +339,7 @@ async function registerUser(name, email, password) {
 async function loginUser(email, password) {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  // data.session yra visas response iš Supabase (su access_token, user ir kt.)
   currentSession = data.session;
   return data;
 }
@@ -395,6 +396,11 @@ async function deleteAllTransactions() {
 
 // ── Pagrindinis render srautas ─────────────────────────────────
 async function loadAndRenderApp() {
+  // Jei currentSession neturi user, paimam iš localStorage
+  if (!currentSession || !currentSession.user) {
+    const stored = loadSession();
+    if (stored) currentSession = stored;
+  }
   cachedTransactions = await fetchTransactions();
   renderDashboard(cachedTransactions);
 }
@@ -963,6 +969,7 @@ loginForm.addEventListener('submit', async event => {
     loginForm.reset();
     clearFormErrors(loginForm);
     showToast('Prisijungimas sėkmingas.');
+    await loadAndRenderApp();
   } catch (err) {
     setFieldError(loginPasswordInput, 'Neteisingas el. paštas arba slaptažodis.');
     showToast('Neteisingi prisijungimo duomenys.', true);
