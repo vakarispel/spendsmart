@@ -193,11 +193,22 @@ window.addEventListener('resize', () => {
 });
 
 // ── Supabase Auth klausytojas ──────────────────────────────────
+// Pirma patikrinam ar sesija jau egzistuoja (po puslapio perkrovimo)
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    currentSession = session;
+    loadAndRenderApp();
+  } else {
+    renderLoggedOut();
+  }
+});
+
+// Klausom Auth pokyčių (prisijungimas, atsijungimas)
 sb.auth.onAuthStateChange(async (event, session) => {
   currentSession = session;
-  if (session) {
+  if (event === 'SIGNED_IN') {
     await loadAndRenderApp();
-  } else {
+  } else if (event === 'SIGNED_OUT') {
     cachedTransactions = [];
     renderLoggedOut();
   }
